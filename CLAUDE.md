@@ -13,7 +13,7 @@ Monatsplanung und geteiltes Stunden-Tracking für ein Teammitglied im Projekt Di
 - Env-Variablen: `SUPABASE_URL` + `SUPABASE_SECRET_KEY` (oder `SUPABASE_SERVICE_ROLE_KEY`), `PLANNER_USERS` (`member1:passwort,…`), optional `PLANNER_SECRET`
 
 ## Regeln
-- Planänderungen nur in `plan.js` (`rows`: `p` Person, `fl` Freelance, `ag` Agentur, `prio: true` → PRIO-Label; altes `blocker` wird wie `prio` behandelt).
+- Planänderungen nur in `plan.js` (`rows`: `p` Person, `fl` Freelance, `ag` Agentur, `prio: true` → PRIO-Label; altes `blocker` wird wie `prio` behandelt; Anzeige per `showPrio` in plan.js, aktuell aus).
 - Paket-`id`s nie ändern (sonst Zähler bei 0). Neue Pakete auch in `api/hours.js` unter `IDS` eintragen.
 - Passwörter nie ins Repo (öffentlich!), nur in `PLANNER_USERS` auf Vercel. Namen fürs Dropdown in `plan.js` unter `users`.
 - Datenschutz: `plan.js` ist trotz Login öffentlich lesbar (statisch + öffentliches Repo); geschützt sind nur die Ist-Stunden.

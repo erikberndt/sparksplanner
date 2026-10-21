@@ -13,6 +13,8 @@ window.PLAN = {
     { id: "member1", n: "member1" }
   ],
 
+  showPrio: false,         // PRIO-Label anzeigen (true) oder ausblenden (false)
+
   hoursPerDay: 8,         // Planwert in Stunden = Tage × hoursPerDay
   freelanceBudget: 6,      // Freelancertage gesamt
 
