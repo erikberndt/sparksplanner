@@ -13,4 +13,5 @@ Monatsplanung und geteiltes Stunden-Tracking für ein Teammitglied im Projekt Di
 - Datenschutz: enthält Beschäftigtendaten, ohne Login für alle mit Link sichtbar und änderbar.
 
 ## Status
-- 2026-10-21: Aus `~/Downloads/planner` übernommen, lokales Git-Repo (`main`) angelegt. Noch kein GitHub-Remote, noch nicht auf Vercel.
+- 2026-10-21: Aus `~/Downloads/planner` übernommen, Git-Repo (`main`) angelegt.
+- GitHub: https://github.com/erikberndt/sparksplanner (öffentlich). Noch nicht auf Vercel.
