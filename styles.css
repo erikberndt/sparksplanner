@@ -20,9 +20,8 @@ body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:1
 .wrap{max-width:1200px;margin:0 auto;padding-block:28px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:24px}
 header{display:grid;gap:6px}
 .eyebrow{font-family:var(--f-mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
-h1{font-family:var(--f-display);font-weight:700;font-size:clamp(26px,4vw,34px);line-height:1.1;margin:0;text-wrap:balance}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(56px,12vw,128px);line-height:.95;letter-spacing:-.02em;margin:0;text-wrap:balance}
 h2{font-family:var(--f-display);font-weight:600;font-size:18px;margin:0}
-.lede{color:var(--muted);margin:0;max-width:70ch}
 .legend{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:13px;color:var(--muted);align-items:center}
 .legend .chip{position:static}
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:10px}
@@ -81,6 +80,7 @@ body:not(.locked) .gate{display:none}
 .gate-box button{font:600 15px var(--f-body);height:42px;border:0;border-radius:7px;background:var(--strat);color:#fff;cursor:pointer}
 .gate-box button:disabled{opacity:.6;cursor:default}
 .gate-err{margin:0;min-height:1.5em;font-size:13px;color:var(--over)}
-.topline{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.topline{display:flex;justify-content:space-between;align-items:flex-start;gap:12px 24px;flex-wrap:wrap}
+.topline .who{padding-top:10px}
 .who{font-size:13px;color:var(--muted)}
 .who button{font:inherit;color:var(--strat);background:none;border:0;padding:0;cursor:pointer;text-decoration:underline}

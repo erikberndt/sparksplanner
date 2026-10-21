@@ -16,7 +16,6 @@
   const planH = (r) => total(r.p) * HPD;
 
   /* ---------- Kopf und Legende ---------- */
-  $("eyebrow").textContent = `Education Innovation Lab · Digital Sparks · Stand ${P.stand}`;
   $("title").textContent = P.title;
   $("legend").innerHTML =
     Object.values(P.streams).map((s) => `<span><span class="chip" style="background:${css(s.c)}">1 T</span> ${s.n}</span>`).join("") +
