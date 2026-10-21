@@ -21,7 +21,7 @@
     Object.values(P.streams).map((s) => `<span><i class="sw" style="background:${css(s.c)}"></i>${s.n}</span>`).join("") +
     `<span><i class="sw ext"></i>Freelance</span>` +
     `<span><i class="sw ext ag"></i>Agentur</span>` +
-    `<span><span class="badge block">BLOCKER</span> muss passieren</span>`;
+    `<span><span class="badge prio">PRIO</span> muss passieren</span>`;
 
   /* ---------- Tabelle ---------- */
   const cols = M.length + 2;
@@ -36,8 +36,7 @@
       h += `<tr class="grp"><td colspan="${cols}"><i style="background:${css(P.streams[r.s].c)}"></i>${P.streams[r.s].n}</td></tr>`;
     }
     h += `<tr><td class="lab"><span class="t">${r.n}</span>` +
-      (r.blocker ? `<span class="badge block">BLOCKER</span>` : "") +
-      (r.prio ? `<span class="badge hoch">Prio hoch</span>` : "") +
+      (r.prio || r.blocker ? `<span class="badge prio">PRIO</span>` : "") +
       (r.sub ? `<span class="s">${r.sub}</span>` : "") + `</td>`;
     for (const m of M) {
       const p = (r.p || {})[m.k], f = (r.fl || {})[m.k], a = (r.ag || {})[m.k];

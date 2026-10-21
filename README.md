@@ -18,7 +18,7 @@ Monatsplanung und geteiltes Stunden-Tracking für ein Teammitglied im Projekt Di
 
 ## Plan ändern
 
-In `plan.js` unter `rows`: `p` = Tage der Person je Monat, `fl` = Freelance, `ag` = Agentur, `blocker`/`prio` = Badges.
+In `plan.js` unter `rows`: `p` = Tage der Person je Monat, `fl` = Freelance, `ag` = Agentur, `prio: true` = rotes PRIO-Label.
 Die `id` eines Pakets nicht ändern, sonst beginnt sein Zähler bei 0. Neue Pakete zusätzlich in `api/hours.js` unter `IDS` eintragen.
 
 ## Hosting (Vercel)
