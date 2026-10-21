@@ -25,7 +25,7 @@ Die `id` eines Pakets nicht ändern, sonst beginnt sein Zähler bei 0. Neue Pake
 
 1. Repo in Vercel als neues Projekt importieren (kein Build nötig).
 2. Storage → Supabase anlegen (Region Frankfurt) und mit dem Projekt verbinden. Im Supabase-Dashboard unter SQL Editor einmal `supabase/schema.sql` ausführen.
-3. Unter Settings → Environment Variables `PLANNER_USERS` anlegen, Format `gina:passwort` (mehrere mit Komma: `gina:pw1,max:pw2`). Optional `PLANNER_SECRET` (beliebiger langer Zufallswert) zum Signieren der Sitzungen.
+3. Unter Settings → Environment Variables `PLANNER_USERS` anlegen, Format `member1:passwort` (mehrere mit Komma: `member1:pw1,max:pw2`). Optional `PLANNER_SECRET` (beliebiger langer Zufallswert) zum Signieren der Sitzungen.
 4. Neu deployen. Die Funktion liest `SUPABASE_URL` und `SUPABASE_SECRET_KEY` (oder `SUPABASE_SERVICE_ROLE_KEY`), die Vercel beim Verbinden automatisch setzt.
 
 ## Login

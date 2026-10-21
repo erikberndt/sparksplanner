@@ -10,7 +10,7 @@ Monatsplanung und geteiltes Stunden-Tracking für ein Teammitglied im Projekt Di
 - Mobil (≤720px): Monats-Tabs oben (sticky), Tabelle zeigt nur gewählten Monat (`.mc`/`.on`), Auswahl in localStorage `sp-month`; Standard = aktueller Monat
 - `og.png`: Social Image (1200×630), Quelle `og/og.html` (liest plan.js, Render-Befehl im Kommentar), Meta-Tags in `index.html` mit absoluter URL
 - `.vercelignore`: og/, supabase/, Doku werden nicht deployed
-- Env-Variablen: `SUPABASE_URL` + `SUPABASE_SECRET_KEY` (oder `SUPABASE_SERVICE_ROLE_KEY`), `PLANNER_USERS` (`gina:passwort,…`), optional `PLANNER_SECRET`
+- Env-Variablen: `SUPABASE_URL` + `SUPABASE_SECRET_KEY` (oder `SUPABASE_SERVICE_ROLE_KEY`), `PLANNER_USERS` (`member1:passwort,…`), optional `PLANNER_SECRET`
 
 ## Regeln
 - Planänderungen nur in `plan.js` (`rows`: `p` Person, `fl` Freelance, `ag` Agentur, `prio: true` → PRIO-Label; altes `blocker` wird wie `prio` behandelt).

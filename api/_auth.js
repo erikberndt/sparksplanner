@@ -1,6 +1,6 @@
 // Digital Sparks Hours – Login-Hilfen (kein eigener Endpunkt, "_" am Anfang)
 // Nutzer und Passwörter kommen aus der Umgebungsvariable PLANNER_USERS,
-// Format: "gina:passwort,max:passwort2". Nie ins Repo schreiben.
+// Format: "member1:passwort,max:passwort2". Nie ins Repo schreiben.
 // Sitzung: signiertes Cookie (HMAC), 30 Tage gültig.
 
 const crypto = require("crypto");

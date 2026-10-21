@@ -5,12 +5,12 @@
 
 window.PLAN = {
   stand: "16.10.2026",
-  title: "Gina",            // große Überschrift oben, frei änderbar
+  title: "member1",           // große Überschrift oben, frei änderbar
 
   // Namen im Login-Dropdown. id muss zu PLANNER_USERS in Vercel passen
   // (Passwörter stehen nur dort, nie hier).
   users: [
-    { id: "gina", n: "Gina" }
+    { id: "member1", n: "member1" }
   ],
 
   hoursPerDay: 8,         // Planwert in Stunden = Tage × hoursPerDay
