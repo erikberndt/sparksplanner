@@ -8,7 +8,8 @@ Monatsplanung und geteiltes Stunden-Tracking für ein Teammitglied im Projekt Di
 - `api/login.js` + `api/_auth.js`: Login-Modal, signiertes HttpOnly-Cookie (30 Tage); `api/hours.js` antwortet ohne Login mit 401
 - Export/Import (Buttons oben rechts nach Login): JSON `{app, exported, hours:{id:h}, rows}`; Import → `POST /api/hours {set}` = Upsert absoluter Werte
 - Mobil (≤720px): Monats-Tabs oben (sticky), Tabelle zeigt nur gewählten Monat (`.mc`/`.on`), Auswahl in localStorage `sp-month`; Standard = aktueller Monat
-- `og.png`: Social Image (1200×630), Meta-Tags in `index.html` mit absoluter URL
+- `og.png`: Social Image (1200×630), Quelle `og/og.html` (liest plan.js, Render-Befehl im Kommentar), Meta-Tags in `index.html` mit absoluter URL
+- `.vercelignore`: og/, supabase/, Doku werden nicht deployed
 - Env-Variablen: `SUPABASE_URL` + `SUPABASE_SECRET_KEY` (oder `SUPABASE_SERVICE_ROLE_KEY`), `PLANNER_USERS` (`gina:passwort,…`), optional `PLANNER_SECRET`
 
 ## Regeln

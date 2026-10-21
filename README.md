@@ -13,7 +13,7 @@ Monatsplanung und geteiltes Stunden-Tracking für ein Teammitglied im Projekt Di
 | `api/hours.js` | Vercel-Funktion: speichert die Ist-Stunden in Supabase (nur mit Login) |
 | `api/login.js` | Anmelden/Abmelden, setzt ein signiertes Sitzungs-Cookie |
 | `api/_auth.js` | Login-Hilfen (Passwortprüfung, Cookie) |
-| `og.png` | Vorschaubild für geteilte Links (1200 × 630) |
+| `og.png` | Vorschaubild für geteilte Links (1200 × 630), Quelle `og/og.html` |
 | `supabase/schema.sql` | Tabelle `ds_hours` + Funktion `ds_add_hours`, einmal im Supabase SQL Editor ausführen |
 
 ## Plan ändern

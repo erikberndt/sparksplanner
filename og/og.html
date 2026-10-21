@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<!-- Quelle für ../og.png (1200 × 630). Neu rendern:
+     "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new \
+       --window-size=1200,630 --hide-scrollbars --virtual-time-budget=5000 \
+       --screenshot=og.png "file://$PWD/og/og.html"
+     Der Monatsstreifen unten wird live aus plan.js berechnet. -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=IBM+Plex+Mono:wght@500&display=block">
+<style>
+  :root{
+    --bg:#12161E; --surface:#1A202B; --ink:#E8EBF1; --muted:#9AA3B3; --line:#2A3140;
+    --eil:#3FB8AF; --strat:#7D8CF0; --sparks:#E2A23C; --fl:#B58CF0;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;width:1200px;height:630px;overflow:hidden;background:var(--bg);color:var(--ink)}
+  .card{position:relative;width:1200px;height:630px;padding:64px 72px 60px;display:grid;grid-template-rows:auto 1fr auto}
+  .top{display:flex;justify-content:space-between;font:500 18px "IBM Plex Mono",monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+  h1{margin:0;align-self:center;font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:190px;line-height:.9;letter-spacing:-.01em;white-space:nowrap}
+  .months{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+  .m{display:grid;gap:10px}
+  .m b{font:500 16px "IBM Plex Mono",monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:500}
+  .bar{display:flex;gap:4px;height:34px}
+  .bar i{display:block;border-radius:6px;min-width:6px}
+  .bar i.ext{border:2px dashed var(--fl);background:transparent}
+  .bar i.ag{border-color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="top"><span>Digital Sparks</span><span id="range"></span></div>
+  <h1 id="h">sparksplanner</h1>
+  <div class="months" id="months"></div>
+</div>
+<script src="../plan.js"></script>
+<script>
+  const P = window.PLAN, M = P.months;
+  const col = { base: "var(--eil)", strat: "var(--strat)", sparks: "var(--sparks)" };
+  document.getElementById("range").textContent = `${M[0].n.slice(0, 3)} – ${M[M.length - 1].n.slice(0, 3)}`;
+  // Pro Monat: ein Streifen, Breite = Anteil an der Kapazität, Farbe = Arbeitsstrom, gestrichelt = extern
+  const maxCap = Math.max(...M.map((m) => m.cap));
+  document.getElementById("months").innerHTML = M.map((m) => {
+    const seg = [];
+    for (const s of Object.keys(P.streams)) {
+      const d = P.rows.filter((r) => r.s === s).reduce((a, r) => a + ((r.p || {})[m.k] || 0), 0);
+      if (d) seg.push(`<i style="flex:${d};background:${col[s]}"></i>`);
+    }
+    const fl = P.rows.reduce((a, r) => a + ((r.fl || {})[m.k] || 0), 0);
+    const ag = P.rows.reduce((a, r) => a + ((r.ag || {})[m.k] || 0), 0);
+    if (fl) seg.push(`<i class="ext" style="flex:${fl}"></i>`);
+    if (ag) seg.push(`<i class="ext ag" style="flex:${ag}"></i>`);
+    return `<div class="m"><b>${m.n}</b><div class="bar" style="width:${(m.cap / maxCap) * 100}%">${seg.join("")}</div></div>`;
+  }).join("");
+  // Schriftzug auf volle Breite einpassen
+  document.fonts.ready.then(() => {
+    const h = document.getElementById("h"), max = 1200 - 144;
+    h.style.fontSize = (190 * max / h.scrollWidth) + "px";
+  });
+</script>
+</body>
+</html>
