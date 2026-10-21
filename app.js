@@ -104,9 +104,10 @@
   let timer = null, sending = false;
 
   async function load() {
-    if (sending || timer) return;
+    if (sending || timer || document.body.classList.contains("locked")) return;
     try {
       const r = await fetch(API, { cache: "no-store" });
+      if (r.status === 401) { lock(); return false; }
       if (!r.ok) throw new Error(r.status);
       const d = await r.json();
       for (const k in hours) hours[k] = Number(d[k]) || 0;
@@ -130,6 +131,7 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ changes: Object.fromEntries(batch) })
       });
+      if (r.status === 401) { sending = false; lock(); return; }
       if (!r.ok) throw new Error(r.status);
       const d = await r.json();
       for (const k in hours) hours[k] = Number(d[k]) || 0;
@@ -141,9 +143,70 @@
     sending = false;
   }
 
+  /* ---------- Login ---------- */
+  const LOGIN = "/api/login";
+  const USERS = P.users || [];
+  const gate = $("gate"), form = $("gate-form"), sel = $("gate-user"), pw = $("gate-pw"), err = $("gate-err"), btn = $("gate-btn");
+  let started = false;
+  sel.innerHTML = USERS.map((u) => `<option value="${u.id}">${u.n}</option>`).join("");
+
+  function lock(msg) {
+    document.body.classList.add("locked");
+    $("who").textContent = "";
+    err.textContent = msg || "";
+    pw.value = "";
+    (USERS.length > 1 ? sel : pw).focus();
+  }
+
+  function unlock(user) {
+    const u = USERS.find((x) => x.id === user);
+    document.body.classList.remove("locked");
+    $("who").innerHTML = `Angemeldet als ${u ? u.n : user} · <button type="button" id="logout">Abmelden</button>`;
+    $("logout").addEventListener("click", async () => {
+      try { await fetch(LOGIN, { method: "DELETE" }); } catch (e) {}
+      lock();
+    });
+    if (!started) { started = true; startTracking(); } else load();
+  }
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!pw.value) { err.textContent = "Bitte Passwort eingeben"; pw.focus(); return; }
+    btn.disabled = true;
+    err.textContent = "";
+    try {
+      const r = await fetch(LOGIN, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user: sel.value, password: pw.value })
+      });
+      const d = await r.json().catch(() => ({}));
+      if (r.ok) unlock(d.user);
+      else lock(r.status === 401 ? "Name oder Passwort falsch" : d.error || "Anmeldung fehlgeschlagen");
+    } catch (e) {
+      lock("Server nicht erreichbar");
+    }
+    btn.disabled = false;
+  });
+
   (async () => {
+    try {
+      const r = await fetch(LOGIN, { cache: "no-store" });
+      const d = await r.json().catch(() => ({}));
+      if (r.ok) unlock(d.user);
+      else lock(r.status === 401 ? "" : d.error || "Login nicht erreichbar");
+    } catch (e) {
+      lock("Server nicht erreichbar");
+    }
+  })();
+
+  async function startTracking() {
     const ok = await load();
-    if (!ok) { state.textContent = "Stunden · Speicher nicht erreichbar"; return; }
+    if (!ok) {
+      if (!document.body.classList.contains("locked")) state.textContent = "Stunden · Speicher nicht erreichbar";
+      started = false;
+      return;
+    }
     state.textContent = "Stunden · 1 Klick = 1 h";
     document.querySelectorAll(".ctr button").forEach((b) => {
       b.disabled = false;
@@ -161,5 +224,5 @@
     // Stand anderer Personen regelmäßig nachladen
     setInterval(() => { if (!document.hidden) load(); }, 30000);
     document.addEventListener("visibilitychange", () => { if (!document.hidden) load(); });
-  })();
+  }
 })();

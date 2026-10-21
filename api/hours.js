@@ -4,6 +4,9 @@
 //
 // Speicher: Upstash Redis (Vercel Marketplace → Storage → Upstash for Redis,
 // mit dem Projekt verbinden). Nutzt die REST-API, keine npm-Abhängigkeiten.
+// Nur mit Login (siehe api/login.js), sonst 401.
+
+const auth = require("./_auth");
 
 const KEY = "ds-hours:rows";
 
@@ -47,6 +50,10 @@ function toObject(flat) {
 
 module.exports = async (req, res) => {
   res.setHeader("Cache-Control", "no-store");
+  if (!auth.readSession(req)) {
+    res.status(401).json({ error: "Nicht angemeldet" });
+    return;
+  }
   if (!URL_ || !TOKEN) {
     res.status(503).json({ error: "Speicher nicht eingerichtet (Upstash Redis fehlt)" });
     return;

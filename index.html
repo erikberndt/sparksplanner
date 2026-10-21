@@ -10,10 +10,28 @@
 <link rel="stylesheet" href="/styles.css">
 <style>body{margin:0}</style>
 </head>
-<body>
+<body class="locked">
+<div class="gate" id="gate" role="dialog" aria-modal="true" aria-labelledby="gate-h">
+  <form class="panel gate-box" id="gate-form" novalidate>
+    <div class="eyebrow">Digital Sparks · Planung</div>
+    <h2 id="gate-h">Anmelden</h2>
+    <label>Name
+      <select id="gate-user" name="user" required></select>
+    </label>
+    <label>Passwort
+      <input id="gate-pw" name="password" type="password" autocomplete="current-password" required>
+    </label>
+    <p class="gate-err" id="gate-err" role="alert"></p>
+    <button type="submit" id="gate-btn">Anmelden</button>
+  </form>
+</div>
+
 <div class="wrap">
   <header>
-    <div class="eyebrow" id="eyebrow">Education Innovation Lab · Digital Sparks</div>
+    <div class="topline">
+      <div class="eyebrow" id="eyebrow">Education Innovation Lab · Digital Sparks</div>
+      <div class="who" id="who"></div>
+    </div>
     <h1 id="title">Projektplanung Teammitglied</h1>
     <p class="lede">Tage der Person pro Monat. Gestrichelt ist Arbeit, die extern liegt und die Person nichts kostet. Rechts werden die tatsächlichen Stunden pro Arbeitspaket gezählt.</p>
   </header>

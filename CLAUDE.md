@@ -5,13 +5,16 @@ Monatsplanung und geteiltes Stunden-Tracking für ein Teammitglied im Projekt Di
 ## Stack
 - Statische Seite ohne Build: `index.html`, `styles.css`, `plan.js` (Daten), `app.js` (Darstellung + Tracking)
 - `api/hours.js`: Vercel Serverless Function, speichert Ist-Stunden in Upstash Redis
-- Env-Variablen: `KV_REST_API_URL`/`KV_REST_API_TOKEN` (oder `UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN`)
+- `api/login.js` + `api/_auth.js`: Login-Modal, signiertes HttpOnly-Cookie (30 Tage); `api/hours.js` antwortet ohne Login mit 401
+- Env-Variablen: `KV_REST_API_URL`/`KV_REST_API_TOKEN` (oder `UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN`), `PLANNER_USERS` (`gina:passwort,…`), optional `PLANNER_SECRET`
 
 ## Regeln
 - Planänderungen nur in `plan.js` (`rows`: `p` Person, `fl` Freelance, `ag` Agentur, `blocker`/`prio`).
 - Paket-`id`s nie ändern (sonst Zähler bei 0). Neue Pakete auch in `api/hours.js` unter `IDS` eintragen.
-- Datenschutz: enthält Beschäftigtendaten, ohne Login für alle mit Link sichtbar und änderbar.
+- Passwörter nie ins Repo (öffentlich!), nur in `PLANNER_USERS` auf Vercel. Namen fürs Dropdown in `plan.js` unter `users`.
+- Datenschutz: `plan.js` ist trotz Login öffentlich lesbar (statisch + öffentliches Repo); geschützt sind nur die Ist-Stunden.
 
 ## Status
 - 2026-10-21: Aus `~/Downloads/planner` übernommen, Git-Repo (`main`) angelegt.
-- GitHub: https://github.com/erikberndt/sparksplanner (öffentlich). Noch nicht auf Vercel.
+- GitHub: https://github.com/erikberndt/sparksplanner (öffentlich). Vercel: https://sparksplanner.vercel.app (persönlicher Account).
+- Login-Modal eingebaut. Auf Vercel noch nötig: Upstash for Redis verbinden, `PLANNER_USERS` setzen, redeployen.

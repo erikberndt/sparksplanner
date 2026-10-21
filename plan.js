@@ -7,7 +7,13 @@ window.PLAN = {
   stand: "16.10.2026",
   title: "Projektplanung Teammitglied",
 
-  hoursPerDay: 8,          // Planwert in Stunden = Tage × hoursPerDay
+  // Namen im Login-Dropdown. id muss zu PLANNER_USERS in Vercel passen
+  // (Passwörter stehen nur dort, nie hier).
+  users: [
+    { id: "gina", n: "Gina" }
+  ],
+
+  hoursPerDay: 8,         // Planwert in Stunden = Tage × hoursPerDay
   freelanceBudget: 6,      // Freelancertage gesamt
 
   // cap = verfügbare Arbeitstage der Person im Monat (Urlaub schon abgezogen)
