@@ -5,7 +5,7 @@
 
 window.PLAN = {
   stand: "16.10.2026",
-  title: "Projektplanung Teammitglied",
+  title: "Gina",            // große Überschrift oben, frei änderbar
 
   // Namen im Login-Dropdown. id muss zu PLANNER_USERS in Vercel passen
   // (Passwörter stehen nur dort, nie hier).
