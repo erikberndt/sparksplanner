@@ -18,15 +18,15 @@
   /* ---------- Kopf und Legende ---------- */
   $("title").textContent = P.title;
   $("legend").innerHTML =
-    Object.values(P.streams).map((s) => `<span><span class="chip" style="background:${css(s.c)}">1 T</span> ${s.n}</span>`).join("") +
-    `<span><span class="chip ext">FL 1 T</span> Freelance</span>` +
-    `<span><span class="chip ext ag">Agentur 1 T</span> Agentur</span>` +
+    Object.values(P.streams).map((s) => `<span><i class="sw" style="background:${css(s.c)}"></i>${s.n}</span>`).join("") +
+    `<span><i class="sw ext"></i>Freelance</span>` +
+    `<span><i class="sw ext ag"></i>Agentur</span>` +
     `<span><span class="badge block">BLOCKER</span> muss passieren</span>`;
 
   /* ---------- Tabelle ---------- */
   const cols = M.length + 2;
   let h = `<thead><tr><th>Arbeitspaket</th>` +
-    M.map((m) => `<th class="m"><span class="mn">${m.n}</span><span class="md">${m.d} · ${m.cap} AT</span></th>`).join("") +
+    M.map((m) => `<th class="m mc m-${m.k}"><span class="mn">${m.n}</span><span class="md">${m.d} · ${m.cap} AT</span></th>`).join("") +
     `<th class="ist"><span class="mn">Ist</span><span class="md" id="trk-state">Stunden · lädt …</span></th></tr></thead><tbody>`;
 
   let last = "";
@@ -41,7 +41,7 @@
       (r.sub ? `<span class="s">${r.sub}</span>` : "") + `</td>`;
     for (const m of M) {
       const p = (r.p || {})[m.k], f = (r.fl || {})[m.k], a = (r.ag || {})[m.k];
-      h += `<td><div class="cell">` +
+      h += `<td class="mc m-${m.k}"><div class="cell">` +
         (p ? `<span class="chip" style="background:${css(P.streams[r.s].c)}">${nf(p)} T</span>` : "") +
         (f ? `<span class="chip ext">FL ${nf(f)} T</span>` : "") +
         (a ? `<span class="chip ext ag">Agentur ${nf(a)} T</span>` : "") +
@@ -57,16 +57,33 @@
   h += `</tbody><tfoot><tr class="sum"><td>Summe Person</td>` +
     M.map((m) => {
       const s = sumBy("p", m.k), q = s / m.cap, c = q > 1 ? "--over" : q > 0.9 ? "--warn" : "--ok";
-      return `<td>${nf(s)} / ${m.cap} T<div class="meter"><i style="width:${Math.min(q, 1) * 100}%;background:${css(c)}"></i></div></td>`;
+      return `<td class="mc m-${m.k}">${nf(s)} / ${m.cap} T<div class="meter"><i style="width:${Math.min(q, 1) * 100}%;background:${css(c)}"></i></div></td>`;
     }).join("") +
     `<td class="ist" id="ist-sum"></td></tr>` +
     `<tr><td style="font-family:var(--f-body)">Frei</td>` +
     M.map((m) => {
       const f = m.cap - sumBy("p", m.k);
-      return `<td class="free" style="color:${css(f < 0 ? "--over" : f < 1.5 ? "--warn" : "--ok")}">${f >= 0 ? "+" : "−"}${nf(Math.abs(f))} T</td>`;
+      return `<td class="free mc m-${m.k}" style="color:${css(f < 0 ? "--over" : f < 1.5 ? "--warn" : "--ok")}">${f >= 0 ? "+" : "−"}${nf(Math.abs(f))} T</td>`;
     }).join("") +
     `<td class="ist"></td></tr></tfoot>`;
   $("tbl").innerHTML = h;
+
+  /* ---------- Monatsauswahl (nur schmale Bildschirme) ----------
+     Auf dem Handy ist immer nur ein Monat sichtbar, oben umschaltbar. */
+  const now = new Date();
+  const curKey = ["jan", "feb", "mär", "apr", "mai", "jun", "jul", "aug", "sep", "okt", "nov", "dez"][now.getMonth()];
+  let curMonth = M.some((m) => m.k === curKey) ? curKey : M[0].k;
+  try { const s = localStorage.getItem("sp-month"); if (M.some((m) => m.k === s)) curMonth = s; } catch (e) {}
+  $("mtabs").innerHTML = M.map((m) =>
+    `<button type="button" data-m="${m.k}" role="tab"><span>${m.n.slice(0, 3)}</span><small>${m.cap} AT</small></button>`).join("");
+  function showMonth(k) {
+    curMonth = k;
+    document.querySelectorAll("#mtabs button").forEach((b) => b.setAttribute("aria-selected", b.dataset.m === k));
+    document.querySelectorAll("#tbl .mc").forEach((c) => c.classList.toggle("on", c.classList.contains("m-" + k)));
+    try { localStorage.setItem("sp-month", k); } catch (e) {}
+  }
+  $("mtabs").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) showMonth(b.dataset.m); });
+  showMonth(curMonth);
 
   /* ---------- Outsourcing und Hinweise ---------- */
   const li = (x) => `<li><span>${x.t}${x.s ? `<small>${x.s}</small>` : ""}</span><em>${x.v}</em></li>`;

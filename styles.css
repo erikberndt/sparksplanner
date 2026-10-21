@@ -23,7 +23,10 @@ header{display:grid;gap:6px}
 h1{font-family:var(--f-display);font-weight:700;font-size:clamp(56px,12vw,128px);line-height:.95;letter-spacing:-.02em;margin:0;text-wrap:balance}
 h2{font-family:var(--f-display);font-weight:600;font-size:18px;margin:0}
 .legend{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:13px;color:var(--muted);align-items:center}
-.legend .chip{position:static}
+.legend > span{display:inline-flex;align-items:center;gap:7px}
+.legend .sw{display:inline-block;width:14px;height:14px;border-radius:4px;flex:none}
+.legend .sw.ext{border:1.5px dashed var(--fl)}
+.legend .sw.ag{border-color:var(--muted)}
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:10px}
 .scroll{overflow-x:auto}
 table{border-collapse:collapse;width:100%;min-width:860px}
@@ -84,3 +87,31 @@ body:not(.locked) .gate{display:none}
 .topline .who{padding-top:10px}
 .who{font-size:13px;color:var(--muted)}
 .who button{font:inherit;color:var(--strat);background:none;border:0;padding:0;cursor:pointer;text-decoration:underline}
+/* Mobil: ein Monat zur Zeit, oben per Tabs wählbar */
+.mtabs{display:none}
+@media (max-width:720px){
+  .wrap{gap:18px;padding-block:20px 40px}
+  .mtabs{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px;padding:4px;background:var(--surface);border:1px solid var(--line);border-radius:10px;position:sticky;top:8px;z-index:5;box-shadow:0 6px 20px color-mix(in srgb,var(--bg) 80%,transparent)}
+  .mtabs button{font:inherit;border:0;border-radius:7px;background:none;color:var(--muted);padding:8px 4px;cursor:pointer;display:grid;gap:1px;justify-items:center}
+  .mtabs button span{font-family:var(--f-display);font-weight:600;font-size:16px;color:var(--ink)}
+  .mtabs button small{font-family:var(--f-mono);font-size:10.5px}
+  .mtabs button[aria-selected="true"]{background:var(--strat);color:#fff}
+  .mtabs button[aria-selected="true"] span{color:#fff}
+  .mtabs button:focus-visible{outline:2px solid var(--strat);outline-offset:1px}
+  table{min-width:0;table-layout:auto}
+  #tbl .mc{display:none}
+  #tbl .mc.on{display:table-cell}
+  th,td{padding:8px}
+  td.lab{width:auto}
+  thead th.m{width:auto}
+  th.ist,td.ist{width:1%}
+  td.ist{white-space:nowrap}
+  th.ist .md{white-space:normal;display:block;max-width:120px}
+  thead th.m .md{display:none}
+  .scroll{overflow-x:visible}
+  .ctr button{width:28px;height:32px}
+  .ctr output{min-width:40px;font-size:12.5px}
+  td.lab{hyphens:auto;overflow-wrap:anywhere}
+  .chip{padding:0 6px}
+  .cell{flex-direction:column;align-items:flex-start}
+}
