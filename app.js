@@ -161,13 +161,75 @@
   function unlock(user) {
     const u = USERS.find((x) => x.id === user);
     document.body.classList.remove("locked");
-    $("who").innerHTML = `Angemeldet als ${u ? u.n : user} · <button type="button" id="logout">Abmelden</button>`;
+    $("who").innerHTML = `Angemeldet als ${u ? u.n : user} · ` +
+      `<button type="button" id="export">Export</button> · ` +
+      `<button type="button" id="import">Import</button> · ` +
+      `<button type="button" id="logout">Abmelden</button>`;
+    $("export").addEventListener("click", exportHours);
+    $("import").addEventListener("click", () => $("import-file").click());
     $("logout").addEventListener("click", async () => {
       try { await fetch(LOGIN, { method: "DELETE" }); } catch (e) {}
       lock();
     });
     if (!started) { started = true; startTracking(); } else load();
   }
+
+  /* ---------- Export / Import ---------- */
+  // Datei-Format: { app, exported, hours: { "<id>": Stunden }, rows: [lesbare Liste] }.
+  // Import setzt die Stunden auf die Werte aus der Datei (überschreibt).
+  async function exportHours() {
+    if ((await load()) === false) { alert("Export nicht möglich: Stunden konnten nicht geladen werden."); return; }
+    const data = {
+      app: "sparksplanner",
+      exported: new Date().toISOString(),
+      hours: { ...hours },
+      rows: ROWS.map((r) => ({ id: r.id, name: r.n, ist: hours[r.id], plan: planH(r) }))
+    };
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
+    a.download = `sparksplanner-stunden-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
+
+  $("import-file").addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    e.target.value = "";
+    if (!file) return;
+    let set;
+    try {
+      const d = JSON.parse(await file.text());
+      const src = d.hours || d;
+      set = {};
+      for (const r of ROWS) {
+        const v = Number(src[r.id]);
+        if (r.id in src && Number.isFinite(v) && v >= 0) set[r.id] = Math.round(v);
+      }
+    } catch (err) {
+      alert("Die Datei ist kein gültiger Stunden-Export (JSON).");
+      return;
+    }
+    const n = Object.keys(set).length;
+    if (!n) { alert("In der Datei wurden keine passenden Arbeitspakete gefunden."); return; }
+    const sum = Object.values(set).reduce((a, b) => a + b, 0);
+    if (!confirm(`${n} Arbeitspakete mit zusammen ${nf(sum)} h importieren?\n\nDie aktuellen Stunden dieser Pakete werden überschrieben.`)) return;
+    state.textContent = "Stunden · importiert …";
+    try {
+      const r = await fetch(API, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ set })
+      });
+      if (r.status === 401) { lock(); return; }
+      if (!r.ok) throw new Error(r.status);
+      const d = await r.json();
+      for (const k in hours) hours[k] = Number(d[k]) || 0;
+      paintHours();
+      state.textContent = "Stunden · importiert";
+    } catch (err) {
+      state.textContent = "Import fehlgeschlagen";
+    }
+  });
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();

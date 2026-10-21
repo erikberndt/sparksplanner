@@ -1,6 +1,7 @@
 // Digital Sparks Hours – geteilter Stundenzähler
 // GET  /api/hours                         -> { "<id>": Stunden, ... }
 // POST /api/hours  { changes: { "<id>": +1 | -1 | ... } } -> neuer Stand
+// POST /api/hours  { set: { "<id>": Stunden, ... } }      -> Import, setzt absolute Werte
 //
 // Speicher: Supabase (Vercel Marketplace → Storage → Supabase, mit dem Projekt
 // verbinden; Tabelle einmal mit supabase/schema.sql anlegen). Nutzt die
@@ -22,7 +23,7 @@ const URL_ = (process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL |
 const KEY = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 async function supabase(path, init = {}) {
-  const headers = { apikey: KEY, "Content-Type": "application/json" };
+  const headers = { apikey: KEY, "Content-Type": "application/json", ...init.headers };
   // Alte Service-Role-Keys sind JWTs und gehören zusätzlich in Authorization,
   // neue Secret-Keys (sb_secret_…) nur in apikey.
   if (KEY.startsWith("eyJ")) headers.Authorization = `Bearer ${KEY}`;
@@ -58,6 +59,25 @@ module.exports = async (req, res) => {
 
     if (req.method === "POST") {
       const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
+
+      if (body.set) {
+        const now = new Date().toISOString();
+        const rows = [];
+        for (const [id, v] of Object.entries(body.set)) {
+          const n = Math.trunc(Number(v));
+          if (IDS.includes(id) && Number.isFinite(n) && n >= 0 && n <= 10000) rows.push({ id, hours: n, updated_at: now });
+        }
+        if (rows.length) {
+          await supabase("ds_hours?on_conflict=id", {
+            method: "POST",
+            headers: { Prefer: "resolution=merge-duplicates,return=representation" },
+            body: JSON.stringify(rows)
+          });
+        }
+        res.status(200).json(toObject(await supabase("ds_hours?select=id,hours")));
+        return;
+      }
+
       const changes = {};
       for (const [id, d] of Object.entries(body.changes || {})) {
         const n = Math.trunc(Number(d));

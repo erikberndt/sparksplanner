@@ -13,6 +13,7 @@ Monatsplanung und geteiltes Stunden-Tracking für ein Teammitglied im Projekt Di
 | `api/hours.js` | Vercel-Funktion: speichert die Ist-Stunden in Supabase (nur mit Login) |
 | `api/login.js` | Anmelden/Abmelden, setzt ein signiertes Sitzungs-Cookie |
 | `api/_auth.js` | Login-Hilfen (Passwortprüfung, Cookie) |
+| `og.png` | Vorschaubild für geteilte Links (1200 × 630) |
 | `supabase/schema.sql` | Tabelle `ds_hours` + Funktion `ds_add_hours`, einmal im Supabase SQL Editor ausführen |
 
 ## Plan ändern
@@ -32,3 +33,7 @@ Die `id` eines Pakets nicht ändern, sonst beginnt sein Zähler bei 0. Neue Pake
 Vor der Seite liegt ein Anmelde-Modal (Name aus Dropdown + Passwort). Die Namen stehen in `plan.js` unter `users`, die Passwörter nur in `PLANNER_USERS` auf Vercel, nie im Repo. Neue Person: in `plan.js` unter `users` eintragen und in `PLANNER_USERS` ergänzen, dann neu deployen.
 
 **Achtung Datenschutz:** Die Ist-Stunden gibt es nur nach Login. Der Plan selbst (`plan.js`) ist eine statische Datei und steht im öffentlichen Repo, ist also trotz Login öffentlich lesbar.
+
+## Export / Import
+
+Nach dem Login oben rechts: **Export** lädt die Ist-Stunden als JSON (`sparksplanner-stunden-JJJJ-MM-TT.json`). **Import** liest so eine Datei und **überschreibt** die Stunden der enthaltenen Pakete (mit Rückfrage). Unbekannte Paket-ids werden ignoriert.
