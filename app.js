@@ -209,11 +209,17 @@
   const state = (t) => { const el = $("trk-state"); if (el) el.textContent = t; };
   const take = (d) => { for (const t of cur.track) hours[t.id] = Number(d[t.id]) || 0; paint(); };
 
+  // Server hat die Sitzung abgelehnt: Grund fürs Login-Fenster
+  const kicked = async (r) => {
+    const d = await r.json().catch(() => ({}));
+    return `Bitte neu anmelden (Sitzung ungültig: ${d.reason || "unbekannt"})`;
+  };
+
   async function load() {
     if (sending || timer || document.body.classList.contains("locked")) return;
     try {
       const r = await fetch(API, { cache: "no-store" });
-      if (r.status === 401) { lock(); return false; }
+      if (r.status === 401) { lock(await kicked(r)); return false; }
       if (!r.ok) throw new Error(r.status);
       take(await r.json());
       return true;
@@ -236,7 +242,7 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ changes: Object.fromEntries(batch) })
       });
-      if (r.status === 401) { sending = false; lock(); return; }
+      if (r.status === 401) { sending = false; lock(await kicked(r)); return; }
       if (!r.ok) throw new Error(r.status);
       take(await r.json());
       state("Stunden · gespeichert");
@@ -295,7 +301,7 @@
   const LOGIN = "/api/login";
   const USERS = P.users || [];
   const form = $("gate-form"), sel = $("gate-user"), pw = $("gate-pw"), err = $("gate-err"), btn = $("gate-btn");
-  let me = null;
+  let me = null, logins = 0;   // logins: zählt Anmeldeversuche (gegen verspätete Start-Prüfung)
   sel.replaceChildren(...USERS.map((u) => new Option(u.n, u.id)));
 
   function lock(msg) {
@@ -391,7 +397,7 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ set })
       });
-      if (r.status === 401) { lock(); return; }
+      if (r.status === 401) { lock(await kicked(r)); return; }
       if (!r.ok) throw new Error(r.status);
       take(await r.json());
       state("Stunden · importiert");
@@ -405,6 +411,7 @@
     if (!pw.value) { err.textContent = "Bitte Passwort eingeben"; pw.focus(); return; }
     btn.disabled = true;
     err.textContent = "";
+    logins++;
     try {
       const r = await fetch(LOGIN, {
         method: "POST",
@@ -421,13 +428,15 @@
   });
 
   (async () => {
+    const seen = logins;
     try {
       const r = await fetch(LOGIN, { cache: "no-store" });
       const d = await r.json().catch(() => ({}));
+      if (logins !== seen) return;          // inzwischen selbst angemeldet: Ergebnis ignorieren
       if (r.ok) unlock(d.user);
       else lock(r.status === 401 ? "" : d.error || "Login nicht erreichbar");
     } catch (e) {
-      lock("Server nicht erreichbar");
+      if (logins === seen) lock("Server nicht erreichbar");
     }
   })();
 })();

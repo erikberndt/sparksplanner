@@ -28,17 +28,23 @@ function checkPassword(user, password) {
   return ok && Object.hasOwn(USERS, u) ? u : null;
 }
 
-function readSession(req) {
+// Prüft das Sitzungs-Cookie. Gibt { user } oder { reason } zurück; reason ist ein
+// kurzer Grund zur Fehlersuche (verrät nichts Geheimes).
+function checkSession(req) {
+  if (!configured()) return { reason: "login-nicht-eingerichtet" };
   const m = (req.headers.cookie || "").match(new RegExp(`(?:^|;\\s*)${COOKIE}=([^;]+)`));
-  if (!m || !configured()) return null;
+  if (!m) return { reason: "cookie-fehlt" };
   const [data, sig] = m[1].split(".");
-  if (!data || !sig) return null;
+  if (!data || !sig) return { reason: "cookie-kaputt" };
   const a = Buffer.from(sign(data)), b = Buffer.from(sig);
-  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return { reason: "signatur-falsch" };
   const [user, exp] = Buffer.from(data, "base64url").toString().split("|");
-  if (!Object.hasOwn(USERS, user) || Number(exp) < Date.now() / 1000) return null;
-  return user;
+  if (!Object.hasOwn(USERS, user)) return { reason: "konto-unbekannt" };
+  if (Number(exp) < Date.now() / 1000) return { reason: "abgelaufen" };
+  return { user };
 }
+
+const readSession = (req) => checkSession(req).user || null;
 
 function setSession(res, user) {
   const data = Buffer.from(`${user}|${Math.floor(Date.now() / 1000) + MAX_AGE}`).toString("base64url");
@@ -49,4 +55,4 @@ function clearSession(res) {
   res.setHeader("Set-Cookie", `${COOKIE}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax`);
 }
 
-module.exports = { configured, checkPassword, readSession, setSession, clearSession };
+module.exports = { configured, checkPassword, checkSession, readSession, setSession, clearSession };

@@ -13,9 +13,9 @@ module.exports = async (req, res) => {
   }
 
   if (req.method === "GET") {
-    const user = auth.readSession(req);
+    const { user, reason } = auth.checkSession(req);
     if (user) res.status(200).json({ user });
-    else res.status(401).json({ error: "Nicht angemeldet" });
+    else res.status(401).json({ error: "Nicht angemeldet", reason });
     return;
   }
 

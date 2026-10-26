@@ -28,9 +28,9 @@ function toObject(rows, IDS) {
 
 module.exports = async (req, res) => {
   res.setHeader("Cache-Control", "no-store");
-  const user = auth.readSession(req);
+  const { user, reason } = auth.checkSession(req);
   if (!user) {
-    res.status(401).json({ error: "Nicht angemeldet" });
+    res.status(401).json({ error: "Nicht angemeldet", reason });
     return;
   }
   const IDS = idsForUser(user);
