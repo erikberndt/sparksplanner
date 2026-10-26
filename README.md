@@ -26,11 +26,11 @@ Jedes Konto sieht nach dem Login genau die Dashboards, die es braucht: mal eine 
 In `plan.js` unter `dashboards`, jedes mit einem `type`:
 
 - **`person`**: Monatsplanung einer Person. `rows`: `p` = Tage je Monat, `fl` = Freelance, `ag` = Agentur, `prio: true` = PRIO-Label (Anzeige per `showPrio`).
-- **`kurse`**: mehrere Kurse untereinander, je Kurs **immer alle** `packages`. Je Kurs `t` = Tage gesamt je Paket, `fl`/`ag` = davon extern. `who` am Paket = wer es macht; geplante Pakete ohne Person erscheinen als „offen“.
+- **`kurse`**: mehrere Kurse untereinander, je Kurs die `packages` mit Tagen (ohne Tage ausgeblendet). Je Kurs `t` = Tage gesamt je Paket, `fl`/`ag` = davon extern. `who` am Paket = wer es macht, `who` am Kurs überschreibt das; ohne Person „offen“. Spalte **Zeitraum**: aus `from` (Zeilen-ids im Personen-Dashboard, z. B. Ginas Plan) oder als Text in `when`. Kein Stunden-Tracking.
 
 Welche Dashboards ein Konto sieht, steht unter `users[].dashboards`. Bei mehreren erscheinen oben Tabs zum Umschalten. Ein neuer Dashboard-Typ braucht eine Render-Funktion in `app.js` und einen Eintrag in `PLAN.trackIds` (plan.js).
 
-Paket-`id`s und Kurs-`id`s nie ändern, sonst beginnt ihr Stundenzähler bei 0. Der Server liest die erlaubten Pakete direkt aus `plan.js`, eine zweite Liste gibt es nicht.
+Zeilen-`id`s im Personen-Dashboard nie ändern, sonst beginnt ihr Stundenzähler bei 0 (und Zeiträume im Kurs-Dashboard verlieren ihre Verknüpfung). Der Server liest die erlaubten Pakete direkt aus `plan.js`, eine zweite Liste gibt es nicht.
 
 ## Hosting (Vercel)
 

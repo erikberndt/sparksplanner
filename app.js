@@ -109,46 +109,66 @@
   }
 
   /* =================================================================
-     Dashboard-Typ "kurse": mehrere Kurse untereinander, je Kurs alle Pakete
+     Dashboard-Typ "kurse": mehrere Kurse untereinander, je Kurs die Pakete
+     mit Tagen, wer sie macht und wann (Zeitraum). Kein Stunden-Tracking.
      ================================================================= */
   function renderKurse(D) {
     const PK = D.packages;
     const days = (c, p) => ({ t: (c.t || {})[p.id] || 0, fl: (c.fl || {})[p.id] || 0, ag: (c.ag || {})[p.id] || 0 });
     const date = (label, v) => `<span class="tag${v === "tbd" ? " tbd" : ""}">${label} <b>${v}</b></span>`;
-    const track = [], sums = [];
+
+    // Zeitraum aus dem Personen-Dashboard: Monate, in denen die verknüpften Zeilen Tage haben
+    const src = P.dashboards[D.fromDash];
+    function period(c, p) {
+      if ((c.when || {})[p.id]) return c.when[p.id];
+      const ids = (c.from || {})[p.id];
+      if (!src || !ids) return "";
+      const rows = src.rows.filter((r) => ids.includes(r.id));
+      const idx = src.months
+        .map((m, i) => (rows.some((r) => ["p", "fl", "ag"].some((f) => (r[f] || {})[m.k])) ? i : -1))
+        .filter((i) => i >= 0);
+      if (!idx.length) return "";
+      const n = (i) => src.months[i].n.slice(0, 3);
+      // zusammenhängende Monate als „Dez – Jan“, Lücken mit Komma
+      const parts = [];
+      for (let k = 0; k < idx.length; k++) {
+        let e = k;
+        while (e + 1 < idx.length && idx[e + 1] === idx[e] + 1) e++;
+        parts.push(e > k ? `${n(idx[k])} – ${n(idx[e])}` : n(idx[k]));
+        k = e;
+      }
+      return parts.join(", ");
+    }
 
     const legend =
       `<span><i class="sw" style="background:var(--sparks)"></i>Team</span>` +
       `<span><i class="sw ext"></i>Freelance</span>` +
       `<span><i class="sw ext ag"></i>Agentur</span>` +
-      `<span class="hint">Tage je Paket, extern gestrichelt · rechts die tatsächlichen Stunden</span>`;
+      `<span class="hint">Tage je Paket, extern gestrichelt</span>`;
 
     const courses = D.courses.map((c) => {
       let sumT = 0, sumFl = 0, sumAg = 0;
-      const ids = [];
-      const rows = PK.map((p) => {
-        const d = days(c, p), team = Math.max(0, d.t - d.fl - d.ag), id = P.kurseId(c, p);
+      const rows = PK.filter((p) => days(c, p).t > 0).map((p) => {
+        const d = days(c, p), team = Math.max(0, d.t - d.fl - d.ag);
         sumT += d.t; sumFl += d.fl; sumAg += d.ag;
-        ids.push(id);
-        track.push({ id, n: `${c.n} · ${p.n}`, plan: team * HPD });
-        // Wer: aus dem Paket, extern wird ergänzt; geplante Arbeit ohne Person ist "offen"
-        const who = [p.who, d.fl ? "Freelance" : "", d.ag ? "Agentur" : ""].filter(Boolean).join(" + ");
-        const whoHtml = d.t ? (who || `<span class="open">offen</span>`) : `<span class="zero">—</span>`;
-        const note = (c.notes || {})[p.id];
-        const cell = d.t
-          ? (team ? `<span class="chip" style="background:var(--sparks)">${nf(team)} T</span>` : "") +
-            (d.fl ? `<span class="chip ext">FL ${nf(d.fl)} T</span>` : "") +
-            (d.ag ? `<span class="chip ext ag">Agentur ${nf(d.ag)} T</span>` : "")
-          : `<span class="zero">—</span>`;
-        return `<tr class="${d.t ? "" : "empty"}">` +
+        // Wer: Kurs-Angabe vor Paket-Angabe, extern wird ergänzt; ohne Person "offen"
+        const person = (c.who || {})[p.id] || p.who;
+        const who = [person, d.fl ? "Freelance" : "", d.ag ? "Agentur" : ""].filter(Boolean).join(" + ");
+        const whoHtml = who || `<span class="open">offen</span>`;
+        const when = period(c, p);
+        const note = [p.sub, (c.notes || {})[p.id]].filter(Boolean).join(" · ");
+        const cell =
+          (team ? `<span class="chip" style="background:var(--sparks)">${nf(team)} T</span>` : "") +
+          (d.fl ? `<span class="chip ext">FL ${nf(d.fl)} T</span>` : "") +
+          (d.ag ? `<span class="chip ext ag">Agentur ${nf(d.ag)} T</span>` : "");
+        return `<tr>` +
           `<td class="lab"><span class="t">${p.n}</span>` +
-            ([p.sub, note].filter(Boolean).length ? `<span class="s">${[p.sub, note].filter(Boolean).join(" · ")}</span>` : "") +
-            `<span class="s who-m">${d.t ? whoHtml : ""}</span></td>` +
+            (note ? `<span class="s">${note}</span>` : "") +
+            `<span class="s who-m">${whoHtml}</span></td>` +
           `<td class="days"><div class="cell">${cell}</div></td>` +
           `<td class="who-c">${whoHtml}</td>` +
-          `<td class="ist">${counter(id, `${c.n} · ${p.n}`)}</td></tr>`;
+          `<td class="when">${when || `<span class="zero">—</span>`}</td></tr>`;
       }).join("");
-      sums.push({ el: `ksum-${c.id}`, ids });
       const sumTeam = sumT - sumFl - sumAg;
 
       return `<section class="panel course" aria-labelledby="kh-${c.id}">` +
@@ -161,21 +181,20 @@
           (c.sub ? `<p class="ksub">${c.sub}</p>` : "") +
         `</header>` +
         `<div class="scroll"><table class="ktbl">` +
-          `<thead><tr><th>Paket</th><th>Tage</th><th class="who-h">Wer</th><th class="ist">Ist</th></tr></thead>` +
+          `<thead><tr><th>Paket</th><th>Tage</th><th class="who-h">Wer</th><th class="when">Zeitraum</th></tr></thead>` +
           `<tbody>${rows}</tbody>` +
           `<tfoot><tr class="sum"><td>Summe</td>` +
             `<td>${nf(sumT)} T<small class="ksplit">Team ${nf(sumTeam)}${sumFl ? ` · FL ${nf(sumFl)}` : ""}${sumAg ? ` · Agentur ${nf(sumAg)}` : ""}</small></td>` +
-            `<td class="who-c"></td><td class="ist" id="ksum-${c.id}"></td></tr></tfoot>` +
+            `<td class="who-c"></td><td class="when"></td></tr></tfoot>` +
         `</table></div>` +
       `</section>`;
     }).join("");
 
     dash.innerHTML =
       `<div class="legend">${legend}</div>` +
-      `<p class="kstate" id="trk-state">Stunden · lädt …</p>` +
       `<div class="courses">${courses}</div>`;
 
-    return { track, sums };
+    return { track: [], sums: [] };
   }
 
   const RENDER = { person: renderPerson, kurse: renderKurse };
@@ -216,7 +235,7 @@
   };
 
   async function load() {
-    if (sending || timer || document.body.classList.contains("locked")) return;
+    if (sending || timer || !cur.track.length || document.body.classList.contains("locked")) return;
     try {
       const r = await fetch(API, { cache: "no-store" });
       if (r.status === 401) { lock(await kicked(r)); return false; }
@@ -285,6 +304,8 @@
     document.querySelectorAll("#dtabs button").forEach((b) => b.setAttribute("aria-selected", b.dataset.k === key));
     try { localStorage.setItem("sp-dash-" + me, key); } catch (e) {}
     paint();
+    $("io").hidden = !cur.track.length;     // Export/Import nur mit Stunden-Tracking
+    if (!cur.track.length) return;
     const ok = await load();
     if (cur.key !== key) return;            // inzwischen umgeschaltet
     if (ok) {
@@ -322,8 +343,8 @@
     const u = USERS.find((x) => x.id === user);
     document.body.classList.remove("locked");
     $("who").innerHTML = `Angemeldet als <span id="who-name"></span> · ` +
-      `<button type="button" id="export">Export</button> · ` +
-      `<button type="button" id="import">Import</button> · ` +
+      `<span id="io"><button type="button" id="export">Export</button> · ` +
+      `<button type="button" id="import">Import</button> · </span>` +
       `<button type="button" id="logout">Abmelden</button>`;
     $("who-name").textContent = u ? u.n : user;
     $("export").addEventListener("click", exportHours);

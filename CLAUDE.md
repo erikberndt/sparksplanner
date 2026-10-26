@@ -6,8 +6,8 @@ Planungs-Dashboards und geteiltes Stunden-Tracking für Digital Sparks (Educatio
 - Statische Seite ohne Build: `index.html`, `styles.css`, `plan.js` (Daten), `app.js` (Darstellung + Tracking)
 - `plan.js`: `users[]` (id, n, dashboards[]) + `dashboards{}` mit `type`:
   - `person` → `renderPerson` (Monatsmatrix, Monats-Tabs mobil ≤720px, localStorage `sp-month`)
-  - `kurse` → `renderKurse` (Kurse untereinander, je Kurs immer alle `packages`; `t` gesamt, `fl`/`ag` davon extern; „offen“ wenn Tage aber kein `who`)
-  - `PLAN.trackIds(d)` / `PLAN.kurseId(c,p)` = Stunden-Schlüssel, von Seite UND Server genutzt
+  - `kurse` → `renderKurse` (Kurse untereinander, nur Pakete mit Tagen; `t` gesamt, `fl`/`ag` davon extern; `who` je Kurs überschreibt Paket-`who`, „offen“ ohne Person; Spalte Zeitraum aus `from` = Zeilen-ids im Personen-Dashboard `fromDash` (Monate mit Tagen) oder Text `when`; KEIN Stunden-Tracking, Export/Import ausgeblendet)
+  - `PLAN.trackIds(d)` = Stunden-Schlüssel (nur `person`), von Seite UND Server genutzt
 - Mehrere Dashboards je Konto → Tabs `#dtabs` (localStorage `sp-dash-<user>`)
 - `api/hours.js`: Supabase REST, Tabelle `ds_hours`, RPC `ds_add_hours`; erlaubte ids je Konto via `api/_plan.js` (lädt plan.js mit Fake-`window`). Stunden in halben Schritten (`numeric(7,1)`, Klick = ±0,5 h)
 - `api/_supabase.js`: gemeinsamer REST-Zugriff; RLS an ohne Policies → nur Server-Key
@@ -28,4 +28,5 @@ Planungs-Dashboards und geteiltes Stunden-Tracking für Digital Sparks (Educatio
 ## Status
 - 2026-10-21: Aus `~/Downloads/planner` übernommen. GitHub https://github.com/erikberndt/sparksplanner (öffentlich), Vercel https://sparksplanner.vercel.app (persönlicher Account), Supabase verbunden.
 - 2026-10-26: Halbe Stunden (Migration `supabase/migration-2026-10-halbe-stunden.sql` in Supabase gelaufen).
+- 2026-10-26: Kurs-Dashboard ohne Tracking, nur Pakete mit Tagen, Zeiträume aus Ginas Plan (member1 = Gina).
 - 2026-10-26: Namensänderung per Klick wieder entfernt (Tabelle `ds_names` evtl. noch in Supabase, ungenutzt). Dashboards eingeführt: member1 → `person`, member2 → `sparks` (Einsamkeit/DKHW, Mythos Neutralität/Robert Bosch, Klassenrat/DeGeDe). Auf Vercel nötig: `PLANNER_USERS` um `member2:…` ergänzen + Redeploy.

@@ -124,7 +124,7 @@ body:not(.locked) .gate{display:none}
 
 /* Dashboard-Typ "kurse": Kurse untereinander */
 .legend .hint{color:var(--muted);font-size:12.5px}
-.kstate{margin:-12px 0 0;font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.kstate{margin:0;font-family:var(--f-mono);font-size:12px;color:var(--muted)}
 .courses{display:grid;gap:20px}
 .course{overflow:hidden}
 .khead{padding:18px 20px 16px;display:grid;gap:10px;border-bottom:1px solid var(--line)}
@@ -136,9 +136,11 @@ body:not(.locked) .gate{display:none}
 .tag.tbd b{color:var(--warn)}
 .tag.kind-intern{border-color:var(--sparks);color:var(--sparks)}
 .ksub{margin:0;color:var(--muted);font-size:13px;max-width:70ch}
-.ktbl{min-width:640px}
+.ktbl{min-width:600px}
 .ktbl th:nth-child(2),.ktbl td.days{width:22%}
-.ktbl td.who-c,.ktbl th.who-h{width:22%;font-size:13px}
+.ktbl td.who-c,.ktbl th.who-h{width:28%;font-size:13px}
+.ktbl th.when,.ktbl td.when{width:16%;white-space:nowrap}
+.ktbl td.when{font-family:var(--f-mono);font-size:12.5px}
 .ktbl tr.empty .t{color:var(--muted);font-weight:400}
 .ktbl .zero{color:var(--line-strong)}
 .ktbl .open{color:var(--warn);font-weight:500}

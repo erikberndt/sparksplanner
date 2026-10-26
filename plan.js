@@ -107,9 +107,11 @@ window.PLAN = {
       type: "kurse",
       title: "Sparks",
       tab: "Sparks",
+      // Zeiträume kommen aus diesem Personen-Dashboard (member1 = Gina):
+      // je Kurs unter "from" stehen die passenden Zeilen-ids von dort.
+      fromDash: "person",
 
-      // Arbeitspakete, die jeder Kurs hat (in dieser Reihenfolge, immer alle).
-      //   id  = fester Schlüssel fürs Stunden-Tracking, NICHT ändern
+      // Arbeitspakete in dieser Reihenfolge. Je Kurs erscheinen nur die mit Tagen.
       //   who = wer das Paket macht (Agentur/Freelance wird automatisch ergänzt)
       packages: [
         { id: "contenterarbeitung", n: "Content-Erarbeitung", who: "" },
@@ -123,9 +125,11 @@ window.PLAN = {
       ],
 
       // Kurse
-      //   id      = fester Schlüssel fürs Stunden-Tracking, NICHT ändern
-      //   t       = Tage je Paket gesamt (inkl. extern)
+      //   t       = Tage je Paket gesamt (inkl. extern); Pakete ohne Tage werden nicht gezeigt
       //   fl / ag = davon Freelance / Agentur (kostet das Team nichts)
+      //   who     = abweichende Personen für ein Paket in diesem Kurs
+      //   from    = Zeilen-ids aus dem Personen-Dashboard → Zeitraum (Monate mit Tagen)
+      //   when    = Zeitraum als Text, falls nicht aus "from" ableitbar
       //   test / release: Datum oder "tbd"
       courses: [
         {
@@ -136,7 +140,9 @@ window.PLAN = {
           t:  { contenterarbeitung: 15, interactive: 11, briefing: 1, marketing: 6, einpflegen: 2, iteration: 2 },
           fl: { interactive: 2 },
           ag: { marketing: 4 },
-          notes: { marketing: "Kampagne" }
+          notes: { marketing: "Kampagne" },
+          who: { contenterarbeitung: "Hannah, Susanne, Jorina, Jessi" },
+          from: { interactive: ["r_einsamkeit-interactive", "r_einsamkeit-game"], marketing: ["r_einsamkeit-kampagne"] }
         },
         {
           id: "mythos", n: "Mythos Neutralität", partner: "Robert Bosch",
@@ -145,24 +151,23 @@ window.PLAN = {
           test: "tbd", release: "15.1.",
           t:  { contentsupport: 3, interactive: 3, briefing: 1, marketing: 6, einpflegen: 1, iteration: 2, dev: 1 },
           ag: { marketing: 4 },
-          notes: { marketing: "Kampagne" }
+          notes: { marketing: "Kampagne" },
+          from: { interactive: ["r_mythos-support"], briefing: ["r_mythos-support"], marketing: ["r_mythos-kampagne"] }
         },
         {
           id: "klassenrat", n: "Klassenrat", partner: "DeGeDe",
           kind: "markt", kindLabel: "Marktplatzkurs",
           sub: "Marktplatz-Spark mit klassischem Marketingpaket.",
           test: "tbd", release: "W1 Februar",
-          t:  { contentsupport: 3, interactive: 3, briefing: 1, marketing: 3, einpflegen: 1, iteration: 2, dev: 1 }
+          t:  { contentsupport: 3, interactive: 3, briefing: 1, marketing: 3, einpflegen: 1, iteration: 2, dev: 1 },
+          from: { interactive: ["r_klassenrat-support"], briefing: ["r_klassenrat-support"], marketing: ["r_klassenrat-marketing"] }
         }
       ]
     }
   }
 };
 
-// Stunden-Schlüssel je Dashboard. Wird von der Seite UND vom Server benutzt
-// (api/_plan.js), damit beide dieselben Pakete kennen. Nicht ändern.
-window.PLAN.kurseId = (c, p) => `k_${c.id}_${p.id}`;
-window.PLAN.trackIds = (d) =>
-  d.type === "kurse"
-    ? d.courses.flatMap((c) => d.packages.map((p) => window.PLAN.kurseId(c, p)))
-    : d.rows.map((r) => r.id);
+// Stunden-Schlüssel je Dashboard (Pakete mit +/−-Zähler). Wird von der Seite
+// UND vom Server benutzt (api/_plan.js), damit beide dieselben Pakete kennen.
+// Kurs-Dashboards haben kein Stunden-Tracking.
+window.PLAN.trackIds = (d) => (d.type === "person" ? d.rows.map((r) => r.id) : []);
