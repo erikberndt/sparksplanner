@@ -35,7 +35,7 @@
 </div>
 <script src="../plan.js"></script>
 <script>
-  const P = window.PLAN, M = P.months;
+  const P = window.PLAN.dashboards.person, M = P.months;
   const col = { base: "var(--eil)", strat: "var(--strat)", sparks: "var(--sparks)" };
   document.getElementById("range").textContent = `${M[0].n.slice(0, 3)} – ${M[M.length - 1].n.slice(0, 3)}`;
   // Pro Monat: ein Streifen, Breite = Anteil an der Kapazität, Farbe = Arbeitsstrom, gestrichelt = extern

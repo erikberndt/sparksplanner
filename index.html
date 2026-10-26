@@ -43,19 +43,11 @@
       <div class="who" id="who"></div>
       <input type="file" id="import-file" accept=".json,application/json" hidden>
     </div>
+    <nav class="dtabs" id="dtabs" role="tablist" aria-label="Dashboard wählen"></nav>
   </header>
 
-  <div class="legend" id="legend"></div>
-
-  <div class="mtabs" id="mtabs" role="tablist" aria-label="Monat wählen"></div>
-
-  <section class="panel scroll" aria-label="Monatsplanung">
-    <table id="tbl"></table>
-  </section>
-
-  <div class="grid2" id="out"></div>
-
-  <ul class="notes" id="notes"></ul>
+  <!-- Inhalt je nach Dashboard (app.js → renderPerson / renderKurse) -->
+  <main class="dash" id="dash"></main>
 </div>
 
 <script src="/plan.js"></script>

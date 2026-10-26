@@ -41,13 +41,3 @@ $$;
 
 revoke execute on function public.ds_add_hours(jsonb) from public, anon, authenticated;
 grant execute on function public.ds_add_hours(jsonb) to service_role;
-
--- Anpassbare Anzeigenamen (id = Login-Kennung aus PLANNER_USERS, bleibt fest)
-create table if not exists public.ds_names (
-  id         text primary key,
-  name       text not null check (char_length(name) between 1 and 40),
-  updated_at timestamptz not null default now()
-);
-alter table public.ds_names enable row level security;
-revoke all on public.ds_names from anon, authenticated;
-grant select, insert, update on public.ds_names to service_role;

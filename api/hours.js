@@ -6,24 +6,18 @@
 // Speicher: Supabase (Vercel Marketplace → Storage → Supabase, mit dem Projekt
 // verbinden; Tabelle einmal mit supabase/schema.sql anlegen). Nutzt die
 // REST-API, keine npm-Abhängigkeiten. Nur mit Login (siehe api/login.js), sonst 401.
+// Jedes Konto sieht und ändert nur die Pakete seiner eigenen Dashboards.
 
 const auth = require("./_auth");
 const { configured, supabase } = require("./_supabase");
 
-// Erlaubte Arbeitspakete (ids aus plan.js)
-const IDS = [
-  "r_leitung-okr-1", "r_meetings", "r_support-marketing",
-  "r_brandbook-v1", "r_landing-page-v3", "r_influencer-kampagne", "r_pitch-v1",
-  "r_greenjobs-interactive", "r_greenjobs-marketing",
-  "r_einsamkeit-interactive", "r_einsamkeit-game", "r_einsamkeit-kampagne",
-  "r_mythos-support", "r_mythos-kampagne",
-  "r_klassenrat-support", "r_klassenrat-marketing"
-];
+// Erlaubte Arbeitspakete kommen aus plan.js, je Konto nur die seiner Dashboards
+const { idsForUser } = require("./_plan");
 
 // Auf halbe Stunden runden (0.5er-Schritte)
 const half = (v) => Math.round(Number(v) * 2) / 2;
 
-function toObject(rows) {
+function toObject(rows, IDS) {
   const out = {};
   for (const id of IDS) out[id] = 0;
   for (const row of rows || []) {
@@ -34,17 +28,19 @@ function toObject(rows) {
 
 module.exports = async (req, res) => {
   res.setHeader("Cache-Control", "no-store");
-  if (!auth.readSession(req)) {
+  const user = auth.readSession(req);
+  if (!user) {
     res.status(401).json({ error: "Nicht angemeldet" });
     return;
   }
+  const IDS = idsForUser(user);
   if (!configured()) {
     res.status(503).json({ error: "Speicher nicht eingerichtet (Supabase fehlt)" });
     return;
   }
   try {
     if (req.method === "GET") {
-      res.status(200).json(toObject(await supabase("ds_hours?select=id,hours")));
+      res.status(200).json(toObject(await supabase("ds_hours?select=id,hours"), IDS));
       return;
     }
 
@@ -65,7 +61,7 @@ module.exports = async (req, res) => {
             body: JSON.stringify(rows)
           });
         }
-        res.status(200).json(toObject(await supabase("ds_hours?select=id,hours")));
+        res.status(200).json(toObject(await supabase("ds_hours?select=id,hours"), IDS));
         return;
       }
 
@@ -77,7 +73,7 @@ module.exports = async (req, res) => {
       const rows = Object.keys(changes).length
         ? await supabase("rpc/ds_add_hours", { method: "POST", body: JSON.stringify({ changes }) })
         : await supabase("ds_hours?select=id,hours");
-      res.status(200).json(toObject(rows));
+      res.status(200).json(toObject(rows, IDS));
       return;
     }
 

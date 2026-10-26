@@ -1,122 +1,213 @@
 /* =====================================================================
    Digital Sparks Hours – Darstellung und Stunden-Tracking
-   Liest window.PLAN aus plan.js. Die Ist-Stunden liegen geteilt in
-   Supabase und werden über /api/hours gelesen und geschrieben.
+   Liest window.PLAN aus plan.js. Nach dem Login sieht jedes Konto seine
+   Dashboards (plan.js → users[].dashboards). Je Dashboard-Typ gibt es eine
+   eigene Darstellung (renderPerson, renderKurse). Die Ist-Stunden liegen
+   geteilt in Supabase und werden über /api/hours gelesen und geschrieben.
    ===================================================================== */
 (function () {
   "use strict";
 
-  const P = window.PLAN;
-  const M = P.months, ROWS = P.rows, HPD = P.hoursPerDay;
+  const P = window.PLAN, HPD = P.hoursPerDay;
   const $ = (id) => document.getElementById(id);
   const nf = (v) => (Math.round(v * 10) / 10).toLocaleString("de-DE");
   const css = (v) => `var(${v})`;
-  const sumBy = (f, k) => ROWS.reduce((a, r) => a + ((r[f] || {})[k] || 0), 0);
   const total = (o) => Object.values(o || {}).reduce((a, b) => a + b, 0);
-  const planH = (r) => total(r.p) * HPD;
+  const dash = $("dash"), title = $("title");
 
-  /* ---------- Kopf und Legende ---------- */
-  $("title").textContent = P.title;
-  $("legend").innerHTML =
-    Object.values(P.streams).map((s) => `<span><i class="sw" style="background:${css(s.c)}"></i>${s.n}</span>`).join("") +
-    `<span><i class="sw ext"></i>Freelance</span>` +
-    `<span><i class="sw ext ag"></i>Agentur</span>` +
-    (P.showPrio ? `<span><span class="badge prio">PRIO</span> muss passieren</span>` : "");
+  // +/−-Zähler für ein Paket (Wert und Vergleich füllt paint())
+  const counter = (id, n) =>
+    `<div class="ctr">` +
+      `<button type="button" data-r="${id}" data-d="-0.5" aria-label="${n}: eine halbe Stunde weniger" disabled>−</button>` +
+      `<output id="val-${id}">0 h</output>` +
+      `<button type="button" data-r="${id}" data-d="0.5" aria-label="${n}: eine halbe Stunde mehr" disabled>+</button>` +
+    `</div><div class="cmp" id="cmp-${id}"></div>`;
 
-  /* ---------- Tabelle ---------- */
-  const cols = M.length + 2;
-  let h = `<thead><tr><th>Arbeitspaket</th>` +
-    M.map((m) => `<th class="m mc m-${m.k}"><span class="mn">${m.n}</span><span class="md">${m.d} · ${m.cap} AT</span></th>`).join("") +
-    `<th class="ist"><span class="mn">Ist</span><span class="md" id="trk-state">Stunden · lädt …</span></th></tr></thead><tbody>`;
+  /* =================================================================
+     Dashboard-Typ "person": Monatsplanung einer Person
+     ================================================================= */
+  function renderPerson(D) {
+    const M = D.months, ROWS = D.rows;
+    const sumBy = (f, k) => ROWS.reduce((a, r) => a + ((r[f] || {})[k] || 0), 0);
 
-  let last = "";
-  for (const r of ROWS) {
-    if (r.s !== last) {
-      last = r.s;
-      h += `<tr class="grp"><td colspan="${cols}"><i style="background:${css(P.streams[r.s].c)}"></i>${P.streams[r.s].n}</td></tr>`;
-    }
-    h += `<tr><td class="lab"><span class="t">${r.n}</span>` +
-      (P.showPrio && (r.prio || r.blocker) ? `<span class="badge prio">PRIO</span>` : "") +
-      (r.sub ? `<span class="s">${r.sub}</span>` : "") + `</td>`;
-    for (const m of M) {
-      const p = (r.p || {})[m.k], f = (r.fl || {})[m.k], a = (r.ag || {})[m.k];
-      h += `<td class="mc m-${m.k}"><div class="cell">` +
-        (p ? `<span class="chip" style="background:${css(P.streams[r.s].c)}">${nf(p)} T</span>` : "") +
-        (f ? `<span class="chip ext">FL ${nf(f)} T</span>` : "") +
-        (a ? `<span class="chip ext ag">Agentur ${nf(a)} T</span>` : "") +
-        `</div></td>`;
-    }
-    h += `<td class="ist"><div class="ctr">` +
-      `<button type="button" data-r="${r.id}" data-d="-0.5" aria-label="${r.n}: eine halbe Stunde weniger" disabled>−</button>` +
-      `<output id="val-${r.id}">0 h</output>` +
-      `<button type="button" data-r="${r.id}" data-d="0.5" aria-label="${r.n}: eine halbe Stunde mehr" disabled>+</button>` +
-      `</div><div class="cmp" id="cmp-${r.id}"></div></td></tr>`;
-  }
+    const legend =
+      Object.values(D.streams).map((s) => `<span><i class="sw" style="background:${css(s.c)}"></i>${s.n}</span>`).join("") +
+      `<span><i class="sw ext"></i>Freelance</span>` +
+      `<span><i class="sw ext ag"></i>Agentur</span>` +
+      (P.showPrio ? `<span><span class="badge prio">PRIO</span> muss passieren</span>` : "");
 
-  h += `</tbody><tfoot><tr class="sum"><td>Summe Person</td>` +
-    M.map((m) => {
-      const s = sumBy("p", m.k), q = s / m.cap, c = q > 1 ? "--over" : q > 0.9 ? "--warn" : "--ok";
-      return `<td class="mc m-${m.k}">${nf(s)} / ${m.cap} T<div class="meter"><i style="width:${Math.min(q, 1) * 100}%;background:${css(c)}"></i></div></td>`;
-    }).join("") +
-    `<td class="ist" id="ist-sum"></td></tr>` +
-    `<tr><td style="font-family:var(--f-body)">Frei</td>` +
-    M.map((m) => {
-      const f = m.cap - sumBy("p", m.k);
-      return `<td class="free mc m-${m.k}" style="color:${css(f < 0 ? "--over" : f < 1.5 ? "--warn" : "--ok")}">${f >= 0 ? "+" : "−"}${nf(Math.abs(f))} T</td>`;
-    }).join("") +
-    `<td class="ist"></td></tr></tfoot>`;
-  $("tbl").innerHTML = h;
+    const cols = M.length + 2;
+    let h = `<thead><tr><th>Arbeitspaket</th>` +
+      M.map((m) => `<th class="m mc m-${m.k}"><span class="mn">${m.n}</span><span class="md">${m.d} · ${m.cap} AT</span></th>`).join("") +
+      `<th class="ist"><span class="mn">Ist</span><span class="md" id="trk-state">Stunden · lädt …</span></th></tr></thead><tbody>`;
 
-  /* ---------- Monatsauswahl (nur schmale Bildschirme) ----------
-     Auf dem Handy ist immer nur ein Monat sichtbar, oben umschaltbar. */
-  const now = new Date();
-  const curKey = ["jan", "feb", "mär", "apr", "mai", "jun", "jul", "aug", "sep", "okt", "nov", "dez"][now.getMonth()];
-  let curMonth = M.some((m) => m.k === curKey) ? curKey : M[0].k;
-  try { const s = localStorage.getItem("sp-month"); if (M.some((m) => m.k === s)) curMonth = s; } catch (e) {}
-  $("mtabs").innerHTML = M.map((m) =>
-    `<button type="button" data-m="${m.k}" role="tab"><span>${m.n.slice(0, 3)}</span><small>${m.cap} AT</small></button>`).join("");
-  function showMonth(k) {
-    curMonth = k;
-    document.querySelectorAll("#mtabs button").forEach((b) => b.setAttribute("aria-selected", b.dataset.m === k));
-    document.querySelectorAll("#tbl .mc").forEach((c) => c.classList.toggle("on", c.classList.contains("m-" + k)));
-    try { localStorage.setItem("sp-month", k); } catch (e) {}
-  }
-  $("mtabs").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) showMonth(b.dataset.m); });
-  showMonth(curMonth);
-
-  /* ---------- Outsourcing und Hinweise ---------- */
-  const li = (x) => `<li><span>${x.t}${x.s ? `<small>${x.s}</small>` : ""}</span><em>${x.v}</em></li>`;
-  const flUsed = ROWS.reduce((a, r) => a + total(r.fl), 0);
-  const O = P.outsourcing;
-  $("out").innerHTML =
-    `<section class="panel pad"><h3><span>Freelance</span><span>${nf(flUsed)} / ${P.freelanceBudget} T</span></h3><ul class="l">` +
-      O.freelance.map(li).join("") + li({ t: "Noch frei", v: nf(P.freelanceBudget - flUsed) + " T", s: "Reserve" }) + `</ul></section>` +
-    `<section class="panel pad"><h3><span>Agentur</span></h3><ul class="l">${O.agentur.map(li).join("")}</ul></section>` +
-    `<section class="panel pad"><h3><span>Andere Teammitglieder</span></h3><ul class="l">${O.team.map(li).join("")}</ul></section>`;
-  $("notes").innerHTML = P.notes.map((n) => `<li>${n}</li>`).join("");
-
-  /* ---------- Stunden-Tracking ---------- */
-  const hours = Object.fromEntries(ROWS.map((r) => [r.id, 0]));
-
-  function paintHours() {
-    let tv = 0, tp = 0;
+    let last = "";
     for (const r of ROWS) {
-      const v = hours[r.id], plan = planH(r), d = v - plan;
-      tv += v; tp += plan;
-      $("val-" + r.id).textContent = nf(v) + " h";
-      $("cmp-" + r.id).innerHTML = `von ${nf(plan)} h` + (d > 0 ? ` · <b style="color:var(--over)">+${nf(d)} h</b>` : "");
+      if (r.s !== last) {
+        last = r.s;
+        h += `<tr class="grp"><td colspan="${cols}"><i style="background:${css(D.streams[r.s].c)}"></i>${D.streams[r.s].n}</td></tr>`;
+      }
+      h += `<tr><td class="lab"><span class="t">${r.n}</span>` +
+        (P.showPrio && (r.prio || r.blocker) ? `<span class="badge prio">PRIO</span>` : "") +
+        (r.sub ? `<span class="s">${r.sub}</span>` : "") + `</td>`;
+      for (const m of M) {
+        const p = (r.p || {})[m.k], f = (r.fl || {})[m.k], a = (r.ag || {})[m.k];
+        h += `<td class="mc m-${m.k}"><div class="cell">` +
+          (p ? `<span class="chip" style="background:${css(D.streams[r.s].c)}">${nf(p)} T</span>` : "") +
+          (f ? `<span class="chip ext">FL ${nf(f)} T</span>` : "") +
+          (a ? `<span class="chip ext ag">Agentur ${nf(a)} T</span>` : "") +
+          `</div></td>`;
+      }
+      h += `<td class="ist">${counter(r.id, r.n)}</td></tr>`;
     }
-    $("ist-sum").innerHTML = `${nf(tv)} / ${nf(tp)} h<div class="meter"><i style="width:${tp ? Math.min(tv / tp, 1) * 100 : 0}%;background:${css(tv > tp ? "--over" : "--strat")}"></i></div>`;
+
+    h += `</tbody><tfoot><tr class="sum"><td>Summe Person</td>` +
+      M.map((m) => {
+        const s = sumBy("p", m.k), q = s / m.cap, c = q > 1 ? "--over" : q > 0.9 ? "--warn" : "--ok";
+        return `<td class="mc m-${m.k}">${nf(s)} / ${m.cap} T<div class="meter"><i style="width:${Math.min(q, 1) * 100}%;background:${css(c)}"></i></div></td>`;
+      }).join("") +
+      `<td class="ist" id="ist-sum"></td></tr>` +
+      `<tr><td style="font-family:var(--f-body)">Frei</td>` +
+      M.map((m) => {
+        const f = m.cap - sumBy("p", m.k);
+        return `<td class="free mc m-${m.k}" style="color:${css(f < 0 ? "--over" : f < 1.5 ? "--warn" : "--ok")}">${f >= 0 ? "+" : "−"}${nf(Math.abs(f))} T</td>`;
+      }).join("") +
+      `<td class="ist"></td></tr></tfoot>`;
+
+    const li = (x) => `<li><span>${x.t}${x.s ? `<small>${x.s}</small>` : ""}</span><em>${x.v}</em></li>`;
+    const flUsed = ROWS.reduce((a, r) => a + total(r.fl), 0);
+    const O = D.outsourcing;
+
+    dash.innerHTML =
+      `<div class="legend">${legend}</div>` +
+      `<div class="mtabs" id="mtabs" role="tablist" aria-label="Monat wählen"></div>` +
+      `<section class="panel scroll" aria-label="Monatsplanung"><table id="tbl">${h}</table></section>` +
+      `<div class="grid2">` +
+        `<section class="panel pad"><h3><span>Freelance</span><span>${nf(flUsed)} / ${D.freelanceBudget} T</span></h3><ul class="l">` +
+          O.freelance.map(li).join("") + li({ t: "Noch frei", v: nf(D.freelanceBudget - flUsed) + " T", s: "Reserve" }) + `</ul></section>` +
+        `<section class="panel pad"><h3><span>Agentur</span></h3><ul class="l">${O.agentur.map(li).join("")}</ul></section>` +
+        `<section class="panel pad"><h3><span>Andere Teammitglieder</span></h3><ul class="l">${O.team.map(li).join("")}</ul></section>` +
+      `</div>` +
+      `<ul class="notes">${D.notes.map((n) => `<li>${n}</li>`).join("")}</ul>`;
+
+    /* Monatsauswahl (nur schmale Bildschirme): immer nur ein Monat sichtbar */
+    const curKey = ["jan", "feb", "mär", "apr", "mai", "jun", "jul", "aug", "sep", "okt", "nov", "dez"][new Date().getMonth()];
+    let curMonth = M.some((m) => m.k === curKey) ? curKey : M[0].k;
+    try { const s = localStorage.getItem("sp-month"); if (M.some((m) => m.k === s)) curMonth = s; } catch (e) {}
+    $("mtabs").innerHTML = M.map((m) =>
+      `<button type="button" data-m="${m.k}" role="tab"><span>${m.n.slice(0, 3)}</span><small>${m.cap} AT</small></button>`).join("");
+    function showMonth(k) {
+      document.querySelectorAll("#mtabs button").forEach((b) => b.setAttribute("aria-selected", b.dataset.m === k));
+      document.querySelectorAll("#tbl .mc").forEach((c) => c.classList.toggle("on", c.classList.contains("m-" + k)));
+      try { localStorage.setItem("sp-month", k); } catch (e) {}
+    }
+    $("mtabs").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) showMonth(b.dataset.m); });
+    showMonth(curMonth);
+
+    const track = ROWS.map((r) => ({ id: r.id, n: r.n, plan: total(r.p) * HPD }));
+    return { track, sums: [{ el: "ist-sum", ids: track.map((t) => t.id) }] };
   }
-  paintHours();
+
+  /* =================================================================
+     Dashboard-Typ "kurse": mehrere Kurse untereinander, je Kurs alle Pakete
+     ================================================================= */
+  function renderKurse(D) {
+    const PK = D.packages;
+    const days = (c, p) => ({ t: (c.t || {})[p.id] || 0, fl: (c.fl || {})[p.id] || 0, ag: (c.ag || {})[p.id] || 0 });
+    const date = (label, v) => `<span class="tag${v === "tbd" ? " tbd" : ""}">${label} <b>${v}</b></span>`;
+    const track = [], sums = [];
+
+    const legend =
+      `<span><i class="sw" style="background:var(--sparks)"></i>Team</span>` +
+      `<span><i class="sw ext"></i>Freelance</span>` +
+      `<span><i class="sw ext ag"></i>Agentur</span>` +
+      `<span class="hint">Tage je Paket, extern gestrichelt · rechts die tatsächlichen Stunden</span>`;
+
+    const courses = D.courses.map((c) => {
+      let sumT = 0, sumFl = 0, sumAg = 0;
+      const ids = [];
+      const rows = PK.map((p) => {
+        const d = days(c, p), team = Math.max(0, d.t - d.fl - d.ag), id = P.kurseId(c, p);
+        sumT += d.t; sumFl += d.fl; sumAg += d.ag;
+        ids.push(id);
+        track.push({ id, n: `${c.n} · ${p.n}`, plan: team * HPD });
+        // Wer: aus dem Paket, extern wird ergänzt; geplante Arbeit ohne Person ist "offen"
+        const who = [p.who, d.fl ? "Freelance" : "", d.ag ? "Agentur" : ""].filter(Boolean).join(" + ");
+        const whoHtml = d.t ? (who || `<span class="open">offen</span>`) : `<span class="zero">—</span>`;
+        const note = (c.notes || {})[p.id];
+        const cell = d.t
+          ? (team ? `<span class="chip" style="background:var(--sparks)">${nf(team)} T</span>` : "") +
+            (d.fl ? `<span class="chip ext">FL ${nf(d.fl)} T</span>` : "") +
+            (d.ag ? `<span class="chip ext ag">Agentur ${nf(d.ag)} T</span>` : "")
+          : `<span class="zero">—</span>`;
+        return `<tr class="${d.t ? "" : "empty"}">` +
+          `<td class="lab"><span class="t">${p.n}</span>` +
+            ([p.sub, note].filter(Boolean).length ? `<span class="s">${[p.sub, note].filter(Boolean).join(" · ")}</span>` : "") +
+            `<span class="s who-m">${d.t ? whoHtml : ""}</span></td>` +
+          `<td class="days"><div class="cell">${cell}</div></td>` +
+          `<td class="who-c">${whoHtml}</td>` +
+          `<td class="ist">${counter(id, `${c.n} · ${p.n}`)}</td></tr>`;
+      }).join("");
+      sums.push({ el: `ksum-${c.id}`, ids });
+      const sumTeam = sumT - sumFl - sumAg;
+
+      return `<section class="panel course" aria-labelledby="kh-${c.id}">` +
+        `<header class="khead">` +
+          `<h2 id="kh-${c.id}">${c.n}<small>${c.partner}</small></h2>` +
+          `<div class="kmeta">` +
+            `<span class="tag kind-${c.kind}">${c.kindLabel}</span>` +
+            date("Testing", c.test) + date("Release", c.release) +
+          `</div>` +
+          (c.sub ? `<p class="ksub">${c.sub}</p>` : "") +
+        `</header>` +
+        `<div class="scroll"><table class="ktbl">` +
+          `<thead><tr><th>Paket</th><th>Tage</th><th class="who-h">Wer</th><th class="ist">Ist</th></tr></thead>` +
+          `<tbody>${rows}</tbody>` +
+          `<tfoot><tr class="sum"><td>Summe</td>` +
+            `<td>${nf(sumT)} T<small class="ksplit">Team ${nf(sumTeam)}${sumFl ? ` · FL ${nf(sumFl)}` : ""}${sumAg ? ` · Agentur ${nf(sumAg)}` : ""}</small></td>` +
+            `<td class="who-c"></td><td class="ist" id="ksum-${c.id}"></td></tr></tfoot>` +
+        `</table></div>` +
+      `</section>`;
+    }).join("");
+
+    dash.innerHTML =
+      `<div class="legend">${legend}</div>` +
+      `<p class="kstate" id="trk-state">Stunden · lädt …</p>` +
+      `<div class="courses">${courses}</div>`;
+
+    return { track, sums };
+  }
+
+  const RENDER = { person: renderPerson, kurse: renderKurse };
+
+  /* =================================================================
+     Stunden-Tracking (für alle Dashboard-Typen gleich)
+     ================================================================= */
+  let cur = { key: null, track: [], sums: [] };
+  let hours = {};
+
+  function paint() {
+    for (const t of cur.track) {
+      const v = hours[t.id] || 0, d = v - t.plan;
+      $("val-" + t.id).textContent = nf(v) + " h";
+      $("cmp-" + t.id).innerHTML = (t.plan ? `von ${nf(t.plan)} h` : "nicht geplant") +
+        (t.plan && d > 0 ? ` · <b style="color:var(--over)">+${nf(d)} h</b>` : "");
+    }
+    for (const s of cur.sums) {
+      const tv = s.ids.reduce((a, id) => a + (hours[id] || 0), 0);
+      const tp = cur.track.filter((t) => s.ids.includes(t.id)).reduce((a, t) => a + t.plan, 0);
+      $(s.el).innerHTML = `${nf(tv)} / ${nf(tp)} h<div class="meter"><i style="width:${tp ? Math.min(tv / tp, 1) * 100 : 0}%;background:${css(tv > tp ? "--over" : "--strat")}"></i></div>`;
+    }
+  }
 
   /* Speicher: Vercel-Funktion /api/hours (Supabase).
      Klicks werden als Differenz gesendet (+0,5 / −0,5 h), damit gleichzeitige
      Klicks verschiedener Personen sich nicht überschreiben. */
-  const state = $("trk-state");
   const API = "/api/hours";
   const queued = {};          // noch nicht gesendete Differenzen je Paket
   let timer = null, sending = false;
+  const state = (t) => { const el = $("trk-state"); if (el) el.textContent = t; };
+  const take = (d) => { for (const t of cur.track) hours[t.id] = Number(d[t.id]) || 0; paint(); };
 
   async function load() {
     if (sending || timer || document.body.classList.contains("locked")) return;
@@ -124,9 +215,7 @@
       const r = await fetch(API, { cache: "no-store" });
       if (r.status === 401) { lock(); return false; }
       if (!r.ok) throw new Error(r.status);
-      const d = await r.json();
-      for (const k in hours) hours[k] = Number(d[k]) || 0;
-      paintHours();
+      take(await r.json());
       return true;
     } catch (e) {
       return false;
@@ -134,12 +223,13 @@
   }
 
   async function flush() {
+    clearTimeout(timer);
     timer = null;
     const batch = Object.entries(queued).filter(([, v]) => v !== 0);
     for (const k in queued) delete queued[k];
     if (!batch.length) return;
     sending = true;
-    state.textContent = "Stunden · speichert …";
+    state("Stunden · speichert …");
     try {
       const r = await fetch(API, {
         method: "POST",
@@ -148,103 +238,73 @@
       });
       if (r.status === 401) { sending = false; lock(); return; }
       if (!r.ok) throw new Error(r.status);
-      const d = await r.json();
-      for (const k in hours) hours[k] = Number(d[k]) || 0;
-      paintHours();
-      state.textContent = "Stunden · gespeichert";
+      take(await r.json());
+      state("Stunden · gespeichert");
     } catch (e) {
-      state.textContent = "Speichern fehlgeschlagen";
+      state("Speichern fehlgeschlagen");
     }
     sending = false;
   }
 
-  /* ---------- Login ---------- */
+  // Klicks auf +/− (ein Listener für alle Dashboards)
+  dash.addEventListener("click", (e) => {
+    const b = e.target.closest(".ctr button");
+    if (!b || b.disabled) return;
+    const k = b.dataset.r, d = Number(b.dataset.d);
+    if (d < 0 && (hours[k] || 0) <= 0) return;
+    hours[k] = (hours[k] || 0) + d;
+    queued[k] = (queued[k] || 0) + d;
+    paint();
+    state("Stunden · speichert …");
+    clearTimeout(timer);
+    timer = setTimeout(flush, 700);
+  });
+
+  // Stand anderer Personen regelmäßig nachladen
+  setInterval(() => { if (!document.hidden) load(); }, 30000);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) load(); });
+
+  /* =================================================================
+     Dashboards anzeigen und umschalten
+     ================================================================= */
+  const dashKeysOf = (user) => (((P.users || []).find((u) => u.id === user) || {}).dashboards || []).filter((k) => P.dashboards[k]);
+
+  async function show(key) {
+    if (timer) await flush();
+    const D = P.dashboards[key];
+    cur = { key, ...RENDER[D.type](D) };
+    hours = {};
+    title.textContent = D.title;
+    document.title = `${D.title} · sparksplanner`;
+    document.querySelectorAll("#dtabs button").forEach((b) => b.setAttribute("aria-selected", b.dataset.k === key));
+    try { localStorage.setItem("sp-dash-" + me, key); } catch (e) {}
+    paint();
+    const ok = await load();
+    if (cur.key !== key) return;            // inzwischen umgeschaltet
+    if (ok) {
+      dash.querySelectorAll(".ctr button").forEach((b) => { b.disabled = false; });
+      state("Stunden · 1 Klick = ½ h");
+    } else if (!document.body.classList.contains("locked")) {
+      state("Stunden · Speicher nicht erreichbar");
+    }
+  }
+
+  /* =================================================================
+     Login
+     ================================================================= */
   const LOGIN = "/api/login";
   const USERS = P.users || [];
-  const gate = $("gate"), form = $("gate-form"), sel = $("gate-user"), pw = $("gate-pw"), err = $("gate-err"), btn = $("gate-btn");
-  let started = false, me = null;
-
-  /* ---------- Anzeigenamen ----------
-     Die id (z. B. "member1") ist die feste Login-Kennung. Der angezeigte Name
-     kommt aus /api/names (Supabase) und lässt sich per Klick auf die große
-     Überschrift ändern. Ohne gespeicherten Namen gilt plan.js. */
-  const NAMES = "/api/names";
-  const MAIN = USERS[0] && USERS[0].id;   // die geplante Person, ihr Name ist die Überschrift
-  let names = {};
-  const nameOf = (id) => names[id] || (USERS.find((u) => u.id === id) || {}).n || id;
-  const title = $("title");
-
-  function renderNames() {
-    const cur = sel.value;
-    sel.replaceChildren(...USERS.map((u) => new Option(nameOf(u.id), u.id)));
-    if (cur) sel.value = cur;
-    if (document.activeElement !== title) title.textContent = MAIN ? nameOf(MAIN) : P.title;
-    document.title = `${title.textContent} · sparksplanner`;
-    if (me && $("who-name")) $("who-name").textContent = nameOf(me);
-  }
-
-  async function loadNames() {
-    try {
-      const r = await fetch(NAMES, { cache: "no-store" });
-      if (r.ok) { names = await r.json(); renderNames(); }
-    } catch (e) {}
-  }
-  renderNames();
-  loadNames();
-
-  // Überschrift bearbeiten: Klick → tippen → Enter speichert, Esc bricht ab
-  let before = "";
-  title.addEventListener("click", () => {
-    if (!MAIN || document.body.classList.contains("locked") || title.isContentEditable) return;
-    before = title.textContent;
-    try { title.contentEditable = "plaintext-only"; } catch (e) {}
-    if (title.contentEditable !== "plaintext-only") title.contentEditable = "true";
-    title.focus();
-    const range = document.createRange();
-    range.selectNodeContents(title);
-    getSelection().removeAllRanges();
-    getSelection().addRange(range);
-  });
-  title.addEventListener("keydown", (e) => {
-    if (!title.isContentEditable) return;
-    if (e.key === "Enter") { e.preventDefault(); title.blur(); }
-    if (e.key === "Escape") { title.textContent = before; title.blur(); }
-  });
-  title.addEventListener("paste", (e) => {
-    if (!title.isContentEditable) return;
-    e.preventDefault();
-    document.execCommand("insertText", false, (e.clipboardData.getData("text/plain") || "").replace(/\s+/g, " "));
-  });
-  title.addEventListener("blur", async () => {
-    if (!title.isContentEditable) return;
-    title.contentEditable = "false";
-    const name = title.textContent.replace(/\s+/g, " ").trim().slice(0, 40);
-    if (!name || name === before) { title.textContent = before; return; }
-    title.textContent = name;
-    title.classList.add("saving");
-    try {
-      const r = await fetch(NAMES, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: MAIN, name })
-      });
-      if (r.status === 401) { title.textContent = before; lock(); return; }
-      const d = await r.json().catch(() => ({}));
-      if (!r.ok) throw new Error(d.error || r.status);
-      names = d;
-      renderNames();
-    } catch (e) {
-      title.textContent = before;
-      alert("Name konnte nicht gespeichert werden" + (e.message && isNaN(e.message) ? `: ${e.message}` : "."));
-    } finally {
-      title.classList.remove("saving");
-    }
-  });
+  const form = $("gate-form"), sel = $("gate-user"), pw = $("gate-pw"), err = $("gate-err"), btn = $("gate-btn");
+  let me = null;
+  sel.replaceChildren(...USERS.map((u) => new Option(u.n, u.id)));
 
   function lock(msg) {
     me = null;
-    title.removeAttribute("title");
+    cur = { key: null, track: [], sums: [] };
     document.body.classList.add("locked");
+    dash.innerHTML = "";
+    $("dtabs").innerHTML = "";
+    title.textContent = "";
     $("who").textContent = "";
     err.textContent = msg || "";
     pw.value = "";
@@ -253,37 +313,52 @@
 
   function unlock(user) {
     me = user;
+    const u = USERS.find((x) => x.id === user);
     document.body.classList.remove("locked");
     $("who").innerHTML = `Angemeldet als <span id="who-name"></span> · ` +
       `<button type="button" id="export">Export</button> · ` +
       `<button type="button" id="import">Import</button> · ` +
       `<button type="button" id="logout">Abmelden</button>`;
-    $("who-name").textContent = nameOf(user);
-    if (MAIN) title.title = "Klicken, um den Namen zu ändern";
-    loadNames();
+    $("who-name").textContent = u ? u.n : user;
     $("export").addEventListener("click", exportHours);
     $("import").addEventListener("click", () => $("import-file").click());
     $("logout").addEventListener("click", async () => {
+      if (timer) await flush();
       try { await fetch(LOGIN, { method: "DELETE" }); } catch (e) {}
       lock();
     });
-    if (!started) { started = true; startTracking(); } else load();
-  }
 
-  /* ---------- Export / Import ---------- */
-  // Datei-Format: { app, exported, hours: { "<id>": Stunden }, rows: [lesbare Liste] }.
-  // Import setzt die Stunden auf die Werte aus der Datei (überschreibt).
+    const keys = dashKeysOf(user);
+    if (!keys.length) {
+      title.textContent = u ? u.n : user;
+      dash.innerHTML = `<p class="kstate">Für dieses Konto ist noch kein Dashboard eingerichtet (plan.js → users → dashboards).</p>`;
+      return;
+    }
+    // Umschalter nur, wenn das Konto mehrere Dashboards hat
+    $("dtabs").innerHTML = keys.length > 1
+      ? keys.map((k) => `<button type="button" role="tab" data-k="${k}">${P.dashboards[k].tab || P.dashboards[k].title}</button>`).join("")
+      : "";
+    let key = keys[0];
+    try { const s = localStorage.getItem("sp-dash-" + user); if (keys.includes(s)) key = s; } catch (e) {}
+    show(key);
+  }
+  $("dtabs").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b && b.dataset.k !== cur.key) show(b.dataset.k); });
+
+  /* ---------- Export / Import ----------
+     Datei-Format: { app, dashboard, exported, hours: { "<id>": Stunden }, rows: [lesbare Liste] }.
+     Import setzt die Stunden des aktuellen Dashboards auf die Werte aus der Datei (überschreibt). */
   async function exportHours() {
     if ((await load()) === false) { alert("Export nicht möglich: Stunden konnten nicht geladen werden."); return; }
     const data = {
       app: "sparksplanner",
+      dashboard: cur.key,
       exported: new Date().toISOString(),
-      hours: { ...hours },
-      rows: ROWS.map((r) => ({ id: r.id, name: r.n, ist: hours[r.id], plan: planH(r) }))
+      hours: Object.fromEntries(cur.track.map((t) => [t.id, hours[t.id] || 0])),
+      rows: cur.track.map((t) => ({ id: t.id, name: t.n, ist: hours[t.id] || 0, plan: t.plan }))
     };
     const a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
-    a.download = `sparksplanner-stunden-${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = `sparksplanner-stunden-${cur.key}-${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   }
@@ -297,19 +372,19 @@
       const d = JSON.parse(await file.text());
       const src = d.hours || d;
       set = {};
-      for (const r of ROWS) {
-        const v = Number(src[r.id]);
-        if (r.id in src && Number.isFinite(v) && v >= 0) set[r.id] = Math.round(v * 2) / 2;
+      for (const t of cur.track) {
+        const v = Number(src[t.id]);
+        if (t.id in src && Number.isFinite(v) && v >= 0) set[t.id] = Math.round(v * 2) / 2;
       }
     } catch (err) {
       alert("Die Datei ist kein gültiger Stunden-Export (JSON).");
       return;
     }
     const n = Object.keys(set).length;
-    if (!n) { alert("In der Datei wurden keine passenden Arbeitspakete gefunden."); return; }
+    if (!n) { alert("In der Datei wurden keine Pakete dieses Dashboards gefunden."); return; }
     const sum = Object.values(set).reduce((a, b) => a + b, 0);
     if (!confirm(`${n} Arbeitspakete mit zusammen ${nf(sum)} h importieren?\n\nDie aktuellen Stunden dieser Pakete werden überschrieben.`)) return;
-    state.textContent = "Stunden · importiert …";
+    state("Stunden · importiert …");
     try {
       const r = await fetch(API, {
         method: "POST",
@@ -318,12 +393,10 @@
       });
       if (r.status === 401) { lock(); return; }
       if (!r.ok) throw new Error(r.status);
-      const d = await r.json();
-      for (const k in hours) hours[k] = Number(d[k]) || 0;
-      paintHours();
-      state.textContent = "Stunden · importiert";
+      take(await r.json());
+      state("Stunden · importiert");
     } catch (err) {
-      state.textContent = "Import fehlgeschlagen";
+      state("Import fehlgeschlagen");
     }
   });
 
@@ -357,30 +430,4 @@
       lock("Server nicht erreichbar");
     }
   })();
-
-  async function startTracking() {
-    const ok = await load();
-    if (!ok) {
-      if (!document.body.classList.contains("locked")) state.textContent = "Stunden · Speicher nicht erreichbar";
-      started = false;
-      return;
-    }
-    state.textContent = "Stunden · 1 Klick = ½ h";
-    document.querySelectorAll(".ctr button").forEach((b) => {
-      b.disabled = false;
-      b.addEventListener("click", () => {
-        const k = b.dataset.r, d = Number(b.dataset.d);
-        if (d < 0 && hours[k] <= 0) return;
-        hours[k] += d;
-        queued[k] = (queued[k] || 0) + d;
-        paintHours();
-        state.textContent = "Stunden · speichert …";
-        clearTimeout(timer);
-        timer = setTimeout(flush, 700);
-      });
-    });
-    // Stand anderer Personen regelmäßig nachladen
-    setInterval(() => { if (!document.hidden) load(); }, 30000);
-    document.addEventListener("visibilitychange", () => { if (!document.hidden) load(); });
-  }
 })();
