@@ -4,7 +4,7 @@ Monatsplanung und geteiltes Stunden-Tracking für ein Teammitglied im Projekt Di
 
 ## Stack
 - Statische Seite ohne Build: `index.html`, `styles.css`, `plan.js` (Daten), `app.js` (Darstellung + Tracking)
-- `api/hours.js`: Vercel Serverless Function, speichert Ist-Stunden in Supabase (REST, Tabelle `ds_hours`, RPC `ds_add_hours`; Schema in `supabase/schema.sql`, RLS an ohne Policies → nur Server-Key)
+- `api/hours.js`: Vercel Serverless Function, speichert Ist-Stunden in Supabase (REST, Tabelle `ds_hours`, RPC `ds_add_hours`; Schema in `supabase/schema.sql`, RLS an ohne Policies → nur Server-Key). Stunden in halben Schritten (`numeric(7,1)`, Klick = ±0,5 h)
 - `api/login.js` + `api/_auth.js`: Login-Modal, signiertes HttpOnly-Cookie (30 Tage); `api/hours.js` antwortet ohne Login mit 401
 - Export/Import (Buttons oben rechts nach Login): JSON `{app, exported, hours:{id:h}, rows}`; Import → `POST /api/hours {set}` = Upsert absoluter Werte
 - Mobil (≤720px): Monats-Tabs oben (sticky), Tabelle zeigt nur gewählten Monat (`.mc`/`.on`), Auswahl in localStorage `sp-month`; Standard = aktueller Monat
@@ -21,4 +21,5 @@ Monatsplanung und geteiltes Stunden-Tracking für ein Teammitglied im Projekt Di
 ## Status
 - 2026-10-21: Aus `~/Downloads/planner` übernommen, Git-Repo (`main`) angelegt.
 - GitHub: https://github.com/erikberndt/sparksplanner (öffentlich). Vercel: https://sparksplanner.vercel.app (persönlicher Account).
+- 2026-10-26: Halbe Stunden. DB-Umstellung `supabase/migration-2026-10-halbe-stunden.sql` (integer → numeric, Daten bleiben) muss VOR dem Code-Deploy in Supabase laufen.
 - Login-Modal eingebaut. Speicher von Upstash auf Supabase umgestellt (Wunsch: Open Source). Auf Vercel noch nötig: Supabase verbinden, `supabase/schema.sql` ausführen, `PLANNER_USERS` setzen, redeployen.

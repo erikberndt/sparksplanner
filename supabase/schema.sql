@@ -4,7 +4,7 @@
 
 create table if not exists public.ds_hours (
   id         text primary key,
-  hours      integer not null default 0 check (hours >= 0),
+  hours      numeric(7,1) not null default 0 check (hours >= 0),
   updated_at timestamptz not null default now()
 );
 
@@ -20,7 +20,7 @@ insert into public.ds_hours (id, hours) values
   ('r_support-marketing', 14)
 on conflict (id) do nothing;
 
--- Stunden als Differenz addieren (+1 / −1), nie unter 0.
+-- Stunden als Differenz addieren (+0.5 / −0.5), nie unter 0.
 -- Atomar, damit gleichzeitige Klicks sich nicht überschreiben.
 create or replace function public.ds_add_hours(changes jsonb)
 returns setof public.ds_hours
@@ -29,9 +29,9 @@ set search_path = ''
 as $$
 declare
   k text;
-  d integer;
+  d numeric;
 begin
-  for k, d in select key, value::integer from jsonb_each_text(changes) loop
+  for k, d in select key, value::numeric from jsonb_each_text(changes) loop
     insert into public.ds_hours as t (id, hours) values (k, greatest(0, d))
     on conflict (id) do update set hours = greatest(0, t.hours + d), updated_at = now();
   end loop;

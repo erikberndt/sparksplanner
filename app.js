@@ -1,7 +1,7 @@
 /* =====================================================================
    Digital Sparks Hours – Darstellung und Stunden-Tracking
    Liest window.PLAN aus plan.js. Die Ist-Stunden liegen geteilt in
-   Upstash Redis und werden über /api/hours gelesen und geschrieben.
+   Supabase und werden über /api/hours gelesen und geschrieben.
    ===================================================================== */
 (function () {
   "use strict";
@@ -47,9 +47,9 @@
         `</div></td>`;
     }
     h += `<td class="ist"><div class="ctr">` +
-      `<button type="button" data-r="${r.id}" data-d="-1" aria-label="${r.n}: eine Stunde weniger" disabled>−</button>` +
+      `<button type="button" data-r="${r.id}" data-d="-0.5" aria-label="${r.n}: eine halbe Stunde weniger" disabled>−</button>` +
       `<output id="val-${r.id}">0 h</output>` +
-      `<button type="button" data-r="${r.id}" data-d="1" aria-label="${r.n}: eine Stunde mehr" disabled>+</button>` +
+      `<button type="button" data-r="${r.id}" data-d="0.5" aria-label="${r.n}: eine halbe Stunde mehr" disabled>+</button>` +
       `</div><div class="cmp" id="cmp-${r.id}"></div></td></tr>`;
   }
 
@@ -110,8 +110,8 @@
   }
   paintHours();
 
-  /* Speicher: Vercel-Funktion /api/hours (Upstash Redis).
-     Klicks werden als Differenz gesendet (+1 / −1), damit gleichzeitige
+  /* Speicher: Vercel-Funktion /api/hours (Supabase).
+     Klicks werden als Differenz gesendet (+0,5 / −0,5 h), damit gleichzeitige
      Klicks verschiedener Personen sich nicht überschreiben. */
   const state = $("trk-state");
   const API = "/api/hours";
@@ -218,7 +218,7 @@
       set = {};
       for (const r of ROWS) {
         const v = Number(src[r.id]);
-        if (r.id in src && Number.isFinite(v) && v >= 0) set[r.id] = Math.round(v);
+        if (r.id in src && Number.isFinite(v) && v >= 0) set[r.id] = Math.round(v * 2) / 2;
       }
     } catch (err) {
       alert("Die Datei ist kein gültiger Stunden-Export (JSON).");
@@ -284,7 +284,7 @@
       started = false;
       return;
     }
-    state.textContent = "Stunden · 1 Klick = 1 h";
+    state.textContent = "Stunden · 1 Klick = ½ h";
     document.querySelectorAll(".ctr button").forEach((b) => {
       b.disabled = false;
       b.addEventListener("click", () => {

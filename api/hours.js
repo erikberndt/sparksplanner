@@ -1,6 +1,6 @@
 // Digital Sparks Hours – geteilter Stundenzähler
 // GET  /api/hours                         -> { "<id>": Stunden, ... }
-// POST /api/hours  { changes: { "<id>": +1 | -1 | ... } } -> neuer Stand
+// POST /api/hours  { changes: { "<id>": +0.5 | -0.5 | ... } } -> neuer Stand (halbe Stunden)
 // POST /api/hours  { set: { "<id>": Stunden, ... } }      -> Import, setzt absolute Werte
 //
 // Speicher: Supabase (Vercel Marketplace → Storage → Supabase, mit dem Projekt
@@ -31,6 +31,9 @@ async function supabase(path, init = {}) {
   if (!r.ok) throw new Error(`Supabase ${r.status}: ${await r.text()}`);
   return r.json();
 }
+
+// Auf halbe Stunden runden (0.5er-Schritte)
+const half = (v) => Math.round(Number(v) * 2) / 2;
 
 function toObject(rows) {
   const out = {};
@@ -64,7 +67,7 @@ module.exports = async (req, res) => {
         const now = new Date().toISOString();
         const rows = [];
         for (const [id, v] of Object.entries(body.set)) {
-          const n = Math.trunc(Number(v));
+          const n = half(v);
           if (IDS.includes(id) && Number.isFinite(n) && n >= 0 && n <= 10000) rows.push({ id, hours: n, updated_at: now });
         }
         if (rows.length) {
@@ -80,7 +83,7 @@ module.exports = async (req, res) => {
 
       const changes = {};
       for (const [id, d] of Object.entries(body.changes || {})) {
-        const n = Math.trunc(Number(d));
+        const n = half(d);
         if (IDS.includes(id) && n && Math.abs(n) <= 40) changes[id] = n;
       }
       const rows = Object.keys(changes).length

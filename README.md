@@ -15,6 +15,7 @@ Monatsplanung und geteiltes Stunden-Tracking für ein Teammitglied im Projekt Di
 | `api/_auth.js` | Login-Hilfen (Passwortprüfung, Cookie) |
 | `og.png` | Vorschaubild für geteilte Links (1200 × 630), Quelle `og/og.html` |
 | `supabase/schema.sql` | Tabelle `ds_hours` + Funktion `ds_add_hours`, einmal im Supabase SQL Editor ausführen |
+| `supabase/migration-2026-10-halbe-stunden.sql` | Umstellung bestehender Datenbanken auf halbe Stunden (Daten bleiben erhalten) |
 
 ## Plan ändern
 
