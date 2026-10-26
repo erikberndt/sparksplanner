@@ -1,27 +1,31 @@
 # sparksplanner
 
-Monatsplanung und geteiltes Stunden-Tracking für ein Teammitglied im Projekt Digital Sparks (Education Innovation Lab), Okt 2026 – Jan 2027.
+Planungs-Dashboards und geteiltes Stunden-Tracking für Digital Sparks (Education Innovation Lab), Okt 2026 – Jan 2027. Leitidee: jedes Konto sieht genau das Dashboard, das es braucht (Personen, Kurse, später Teams).
 
 ## Stack
 - Statische Seite ohne Build: `index.html`, `styles.css`, `plan.js` (Daten), `app.js` (Darstellung + Tracking)
-- `api/hours.js`: Vercel Serverless Function, speichert Ist-Stunden in Supabase (REST, Tabelle `ds_hours`, RPC `ds_add_hours`; Schema in `supabase/schema.sql`, RLS an ohne Policies → nur Server-Key). Stunden in halben Schritten (`numeric(7,1)`, Klick = ±0,5 h)
-- `api/names.js`: anpassbare Anzeigenamen (Tabelle `ds_names`, Migration `supabase/migration-2026-10-namen.sql`). GET ohne Login (fürs Dropdown), POST nur mit Login. Klick auf die große Überschrift (= Name von `users[0]`) → bearbeiten, Enter speichert, Esc bricht ab. Login-Kennung (`member1`) bleibt fest, nur der angezeigte Name ändert sich. Namen immer per textContent einsetzen (Nutzereingabe!).
-- `api/_supabase.js`: gemeinsamer REST-Zugriff für hours/names
-- `api/login.js` + `api/_auth.js`: Login-Modal, signiertes HttpOnly-Cookie (30 Tage); `api/hours.js` antwortet ohne Login mit 401
-- Export/Import (Buttons oben rechts nach Login): JSON `{app, exported, hours:{id:h}, rows}`; Import → `POST /api/hours {set}` = Upsert absoluter Werte
-- Mobil (≤720px): Monats-Tabs oben (sticky), Tabelle zeigt nur gewählten Monat (`.mc`/`.on`), Auswahl in localStorage `sp-month`; Standard = aktueller Monat
-- `og.png`: Social Image (1200×630), Quelle `og/og.html` (liest plan.js, Render-Befehl im Kommentar), Meta-Tags in `index.html` mit absoluter URL
+- `plan.js`: `users[]` (id, n, dashboards[]) + `dashboards{}` mit `type`:
+  - `person` → `renderPerson` (Monatsmatrix, Monats-Tabs mobil ≤720px, localStorage `sp-month`)
+  - `kurse` → `renderKurse` (Kurse untereinander, je Kurs immer alle `packages`; `t` gesamt, `fl`/`ag` davon extern; „offen“ wenn Tage aber kein `who`)
+  - `PLAN.trackIds(d)` / `PLAN.kurseId(c,p)` = Stunden-Schlüssel, von Seite UND Server genutzt
+- Mehrere Dashboards je Konto → Tabs `#dtabs` (localStorage `sp-dash-<user>`)
+- `api/hours.js`: Supabase REST, Tabelle `ds_hours`, RPC `ds_add_hours`; erlaubte ids je Konto via `api/_plan.js` (lädt plan.js mit Fake-`window`). Stunden in halben Schritten (`numeric(7,1)`, Klick = ±0,5 h)
+- `api/_supabase.js`: gemeinsamer REST-Zugriff; RLS an ohne Policies → nur Server-Key
+- `api/login.js` + `api/_auth.js`: Login-Modal, signiertes HttpOnly-Cookie (30 Tage); `api/hours.js` ohne Login → 401
+- Export/Import je aktuellem Dashboard: JSON `{app, dashboard, exported, hours:{id:h}, rows}`; Import → `POST /api/hours {set}`
+- `og.png`: Social Image (1200×630), Quelle `og/og.html` (liest `dashboards.person`), Render-Befehl im Kommentar
 - `.vercelignore`: og/, supabase/, Doku werden nicht deployed
-- Env-Variablen: `SUPABASE_URL` + `SUPABASE_SECRET_KEY` (oder `SUPABASE_SERVICE_ROLE_KEY`), `PLANNER_USERS` (`member1:passwort,…`), optional `PLANNER_SECRET`
+- Env-Variablen: `SUPABASE_URL` + `SUPABASE_SECRET_KEY` (oder `SUPABASE_SERVICE_ROLE_KEY`), `PLANNER_USERS` (`member1:pw,member2:pw`), optional `PLANNER_SECRET`
 
 ## Regeln
-- Planänderungen nur in `plan.js` (`rows`: `p` Person, `fl` Freelance, `ag` Agentur, `prio: true` → PRIO-Label; altes `blocker` wird wie `prio` behandelt; Anzeige per `showPrio` in plan.js, aktuell aus).
-- Paket-`id`s nie ändern (sonst Zähler bei 0). Neue Pakete auch in `api/hours.js` unter `IDS` eintragen.
-- Passwörter nie ins Repo (öffentlich!), nur in `PLANNER_USERS` auf Vercel. Namen fürs Dropdown in `plan.js` unter `users`.
-- Datenschutz: `plan.js` ist trotz Login öffentlich lesbar (statisch + öffentliches Repo); geschützt sind nur die Ist-Stunden.
+- Planänderungen nur in `plan.js`. Paket-, Zeilen- und Kurs-`id`s nie ändern (sonst Zähler bei 0). Keine zweite id-Liste mehr in der API.
+- Neuer Dashboard-Typ: Render-Funktion in `app.js` (gibt `{track, sums}` zurück) + Zweig in `PLAN.trackIds`.
+- PRIO-Label: `prio: true` an Zeilen, Anzeige per `showPrio` (aktuell aus).
+- Passwörter nie ins Repo (öffentlich!), nur in `PLANNER_USERS` auf Vercel.
+- Datenschutz: `plan.js` ist trotz Login öffentlich lesbar (statisch + öffentliches Repo), inkl. Vornamen bei „Wer“; geschützt sind nur die Ist-Stunden.
+- Nutzer-/Datei-Eingaben nie per innerHTML einsetzen.
 
 ## Status
-- 2026-10-21: Aus `~/Downloads/planner` übernommen, Git-Repo (`main`) angelegt.
-- GitHub: https://github.com/erikberndt/sparksplanner (öffentlich). Vercel: https://sparksplanner.vercel.app (persönlicher Account).
-- 2026-10-26: Halbe Stunden. DB-Umstellung `supabase/migration-2026-10-halbe-stunden.sql` (integer → numeric, Daten bleiben) muss VOR dem Code-Deploy in Supabase laufen.
-- Login-Modal eingebaut. Speicher von Upstash auf Supabase umgestellt (Wunsch: Open Source). Auf Vercel noch nötig: Supabase verbinden, `supabase/schema.sql` ausführen, `PLANNER_USERS` setzen, redeployen.
+- 2026-10-21: Aus `~/Downloads/planner` übernommen. GitHub https://github.com/erikberndt/sparksplanner (öffentlich), Vercel https://sparksplanner.vercel.app (persönlicher Account), Supabase verbunden.
+- 2026-10-26: Halbe Stunden (Migration `supabase/migration-2026-10-halbe-stunden.sql` in Supabase gelaufen).
+- 2026-10-26: Namensänderung per Klick wieder entfernt (Tabelle `ds_names` evtl. noch in Supabase, ungenutzt). Dashboards eingeführt: member1 → `person`, member2 → `sparks` (Einsamkeit/DKHW, Mythos Neutralität/Robert Bosch, Klassenrat/DeGeDe). Auf Vercel nötig: `PLANNER_USERS` um `member2:…` ergänzen + Redeploy.
