@@ -114,3 +114,8 @@ body:not(.locked) .gate{display:none}
   .chip{padding:0 6px}
   .cell{flex-direction:column;align-items:flex-start}
 }
+/* Name in der Überschrift per Klick änderbar (nur angemeldet) */
+body:not(.locked) h1#title{cursor:text;border-radius:10px;outline:2px dashed transparent;outline-offset:6px;transition:outline-color .15s}
+body:not(.locked) h1#title:hover{outline-color:var(--line-strong)}
+h1#title[contenteditable="true"],h1#title[contenteditable="plaintext-only"]{outline:2px solid var(--strat)}
+h1#title.saving{opacity:.6}

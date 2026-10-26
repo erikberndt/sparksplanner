@@ -5,6 +5,8 @@ Monatsplanung und geteiltes Stunden-Tracking für ein Teammitglied im Projekt Di
 ## Stack
 - Statische Seite ohne Build: `index.html`, `styles.css`, `plan.js` (Daten), `app.js` (Darstellung + Tracking)
 - `api/hours.js`: Vercel Serverless Function, speichert Ist-Stunden in Supabase (REST, Tabelle `ds_hours`, RPC `ds_add_hours`; Schema in `supabase/schema.sql`, RLS an ohne Policies → nur Server-Key). Stunden in halben Schritten (`numeric(7,1)`, Klick = ±0,5 h)
+- `api/names.js`: anpassbare Anzeigenamen (Tabelle `ds_names`, Migration `supabase/migration-2026-10-namen.sql`). GET ohne Login (fürs Dropdown), POST nur mit Login. Klick auf die große Überschrift (= Name von `users[0]`) → bearbeiten, Enter speichert, Esc bricht ab. Login-Kennung (`member1`) bleibt fest, nur der angezeigte Name ändert sich. Namen immer per textContent einsetzen (Nutzereingabe!).
+- `api/_supabase.js`: gemeinsamer REST-Zugriff für hours/names
 - `api/login.js` + `api/_auth.js`: Login-Modal, signiertes HttpOnly-Cookie (30 Tage); `api/hours.js` antwortet ohne Login mit 401
 - Export/Import (Buttons oben rechts nach Login): JSON `{app, exported, hours:{id:h}, rows}`; Import → `POST /api/hours {set}` = Upsert absoluter Werte
 - Mobil (≤720px): Monats-Tabs oben (sticky), Tabelle zeigt nur gewählten Monat (`.mc`/`.on`), Auswahl in localStorage `sp-month`; Standard = aktueller Monat

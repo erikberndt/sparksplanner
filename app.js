@@ -162,10 +162,88 @@
   const LOGIN = "/api/login";
   const USERS = P.users || [];
   const gate = $("gate"), form = $("gate-form"), sel = $("gate-user"), pw = $("gate-pw"), err = $("gate-err"), btn = $("gate-btn");
-  let started = false;
-  sel.innerHTML = USERS.map((u) => `<option value="${u.id}">${u.n}</option>`).join("");
+  let started = false, me = null;
+
+  /* ---------- Anzeigenamen ----------
+     Die id (z. B. "member1") ist die feste Login-Kennung. Der angezeigte Name
+     kommt aus /api/names (Supabase) und lässt sich per Klick auf die große
+     Überschrift ändern. Ohne gespeicherten Namen gilt plan.js. */
+  const NAMES = "/api/names";
+  const MAIN = USERS[0] && USERS[0].id;   // die geplante Person, ihr Name ist die Überschrift
+  let names = {};
+  const nameOf = (id) => names[id] || (USERS.find((u) => u.id === id) || {}).n || id;
+  const title = $("title");
+
+  function renderNames() {
+    const cur = sel.value;
+    sel.replaceChildren(...USERS.map((u) => new Option(nameOf(u.id), u.id)));
+    if (cur) sel.value = cur;
+    if (document.activeElement !== title) title.textContent = MAIN ? nameOf(MAIN) : P.title;
+    document.title = `${title.textContent} · sparksplanner`;
+    if (me && $("who-name")) $("who-name").textContent = nameOf(me);
+  }
+
+  async function loadNames() {
+    try {
+      const r = await fetch(NAMES, { cache: "no-store" });
+      if (r.ok) { names = await r.json(); renderNames(); }
+    } catch (e) {}
+  }
+  renderNames();
+  loadNames();
+
+  // Überschrift bearbeiten: Klick → tippen → Enter speichert, Esc bricht ab
+  let before = "";
+  title.addEventListener("click", () => {
+    if (!MAIN || document.body.classList.contains("locked") || title.isContentEditable) return;
+    before = title.textContent;
+    try { title.contentEditable = "plaintext-only"; } catch (e) {}
+    if (title.contentEditable !== "plaintext-only") title.contentEditable = "true";
+    title.focus();
+    const range = document.createRange();
+    range.selectNodeContents(title);
+    getSelection().removeAllRanges();
+    getSelection().addRange(range);
+  });
+  title.addEventListener("keydown", (e) => {
+    if (!title.isContentEditable) return;
+    if (e.key === "Enter") { e.preventDefault(); title.blur(); }
+    if (e.key === "Escape") { title.textContent = before; title.blur(); }
+  });
+  title.addEventListener("paste", (e) => {
+    if (!title.isContentEditable) return;
+    e.preventDefault();
+    document.execCommand("insertText", false, (e.clipboardData.getData("text/plain") || "").replace(/\s+/g, " "));
+  });
+  title.addEventListener("blur", async () => {
+    if (!title.isContentEditable) return;
+    title.contentEditable = "false";
+    const name = title.textContent.replace(/\s+/g, " ").trim().slice(0, 40);
+    if (!name || name === before) { title.textContent = before; return; }
+    title.textContent = name;
+    title.classList.add("saving");
+    try {
+      const r = await fetch(NAMES, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: MAIN, name })
+      });
+      if (r.status === 401) { title.textContent = before; lock(); return; }
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d.error || r.status);
+      names = d;
+      renderNames();
+    } catch (e) {
+      title.textContent = before;
+      alert("Name konnte nicht gespeichert werden" + (e.message && isNaN(e.message) ? `: ${e.message}` : "."));
+    } finally {
+      title.classList.remove("saving");
+    }
+  });
 
   function lock(msg) {
+    me = null;
+    title.removeAttribute("title");
     document.body.classList.add("locked");
     $("who").textContent = "";
     err.textContent = msg || "";
@@ -174,12 +252,15 @@
   }
 
   function unlock(user) {
-    const u = USERS.find((x) => x.id === user);
+    me = user;
     document.body.classList.remove("locked");
-    $("who").innerHTML = `Angemeldet als ${u ? u.n : user} · ` +
+    $("who").innerHTML = `Angemeldet als <span id="who-name"></span> · ` +
       `<button type="button" id="export">Export</button> · ` +
       `<button type="button" id="import">Import</button> · ` +
       `<button type="button" id="logout">Abmelden</button>`;
+    $("who-name").textContent = nameOf(user);
+    if (MAIN) title.title = "Klicken, um den Namen zu ändern";
+    loadNames();
     $("export").addEventListener("click", exportHours);
     $("import").addEventListener("click", () => $("import-file").click());
     $("logout").addEventListener("click", async () => {

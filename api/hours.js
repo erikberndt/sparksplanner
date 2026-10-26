@@ -8,6 +8,7 @@
 // REST-API, keine npm-Abhängigkeiten. Nur mit Login (siehe api/login.js), sonst 401.
 
 const auth = require("./_auth");
+const { configured, supabase } = require("./_supabase");
 
 // Erlaubte Arbeitspakete (ids aus plan.js)
 const IDS = [
@@ -18,19 +19,6 @@ const IDS = [
   "r_mythos-support", "r_mythos-kampagne",
   "r_klassenrat-support", "r_klassenrat-marketing"
 ];
-
-const URL_ = (process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "").replace(/\/$/, "");
-const KEY = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-async function supabase(path, init = {}) {
-  const headers = { apikey: KEY, "Content-Type": "application/json", ...init.headers };
-  // Alte Service-Role-Keys sind JWTs und gehören zusätzlich in Authorization,
-  // neue Secret-Keys (sb_secret_…) nur in apikey.
-  if (KEY.startsWith("eyJ")) headers.Authorization = `Bearer ${KEY}`;
-  const r = await fetch(`${URL_}/rest/v1/${path}`, { ...init, headers });
-  if (!r.ok) throw new Error(`Supabase ${r.status}: ${await r.text()}`);
-  return r.json();
-}
 
 // Auf halbe Stunden runden (0.5er-Schritte)
 const half = (v) => Math.round(Number(v) * 2) / 2;
@@ -50,7 +38,7 @@ module.exports = async (req, res) => {
     res.status(401).json({ error: "Nicht angemeldet" });
     return;
   }
-  if (!URL_ || !KEY) {
+  if (!configured()) {
     res.status(503).json({ error: "Speicher nicht eingerichtet (Supabase fehlt)" });
     return;
   }

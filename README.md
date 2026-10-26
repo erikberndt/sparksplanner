@@ -13,8 +13,11 @@ Monatsplanung und geteiltes Stunden-Tracking für ein Teammitglied im Projekt Di
 | `api/hours.js` | Vercel-Funktion: speichert die Ist-Stunden in Supabase (nur mit Login) |
 | `api/login.js` | Anmelden/Abmelden, setzt ein signiertes Sitzungs-Cookie |
 | `api/_auth.js` | Login-Hilfen (Passwortprüfung, Cookie) |
+| `api/names.js` | Anzeigenamen lesen (öffentlich) und ändern (mit Login) |
+| `api/_supabase.js` | gemeinsamer Supabase-Zugriff |
 | `og.png` | Vorschaubild für geteilte Links (1200 × 630), Quelle `og/og.html` |
 | `supabase/schema.sql` | Tabelle `ds_hours` + Funktion `ds_add_hours`, einmal im Supabase SQL Editor ausführen |
+| `supabase/migration-2026-10-namen.sql` | Tabelle `ds_names` für anpassbare Namen |
 | `supabase/migration-2026-10-halbe-stunden.sql` | Umstellung bestehender Datenbanken auf halbe Stunden (Daten bleiben erhalten) |
 
 ## Plan ändern
@@ -38,3 +41,7 @@ Vor der Seite liegt ein Anmelde-Modal (Name aus Dropdown + Passwort). Die Namen 
 ## Export / Import
 
 Nach dem Login oben rechts: **Export** lädt die Ist-Stunden als JSON (`sparksplanner-stunden-JJJJ-MM-TT.json`). **Import** liest so eine Datei und **überschreibt** die Stunden der enthaltenen Pakete (mit Rückfrage). Unbekannte Paket-ids werden ignoriert.
+
+## Name ändern
+
+Angemeldet auf die große Überschrift klicken, neuen Namen tippen, **Enter** speichert, **Esc** bricht ab. Der Name erscheint dann auch im Login-Dropdown. Angemeldet wird weiter mit der festen Kennung (z. B. `member1`) und demselben Passwort.

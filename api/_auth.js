@@ -18,6 +18,7 @@ const USERS = Object.fromEntries(
 );
 
 const configured = () => Object.keys(USERS).length > 0;
+const ids = () => Object.keys(USERS);
 const sha = (s) => crypto.createHash("sha256").update(String(s)).digest();
 const sign = (s) => crypto.createHmac("sha256", SECRET).update(s).digest("base64url");
 
@@ -49,4 +50,4 @@ function clearSession(res) {
   res.setHeader("Set-Cookie", `${COOKIE}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax`);
 }
 
-module.exports = { configured, checkPassword, readSession, setSession, clearSession };
+module.exports = { configured, ids, checkPassword, readSession, setSession, clearSession };
