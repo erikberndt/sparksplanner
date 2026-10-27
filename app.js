@@ -34,7 +34,8 @@
       Object.values(D.streams).map((s) => `<span><i class="sw" style="background:${css(s.c)}"></i>${s.n}</span>`).join("") +
       `<span><i class="sw ext"></i>Freelance</span>` +
       `<span><i class="sw ext ag"></i>Agentur</span>` +
-      (P.showPrio ? `<span><span class="badge prio">PRIO</span> muss passieren</span>` : "");
+      (P.showPrio ? `<span><span class="badge prio">PRIO</span> muss passieren</span>` : "") +
+      (ROWS.some((r) => r.deprio) ? `<span><span class="badge deprio">DEPRIO</span> zurückgestellt</span>` : "");
 
     const cols = M.length + 2;
     let h = `<thead><tr><th>Arbeitspaket</th>` +
@@ -49,6 +50,7 @@
       }
       h += `<tr><td class="lab"><span class="t">${r.n}</span>` +
         (P.showPrio && (r.prio || r.blocker) ? `<span class="badge prio">PRIO</span>` : "") +
+        (r.deprio ? `<span class="badge deprio">DEPRIO</span>` : "") +
         (r.sub ? `<span class="s">${r.sub}</span>` : "") + `</td>`;
       for (const m of M) {
         const p = (r.p || {})[m.k], f = (r.fl || {})[m.k], a = (r.ag || {})[m.k];

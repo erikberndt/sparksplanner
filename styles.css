@@ -48,6 +48,7 @@ tr.grp i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-righ
 .chip.off{background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--off) 35%,transparent) 0 4px,color-mix(in srgb,var(--off) 15%,transparent) 4px 8px)!important;color:var(--ink)}
 .badge{font-family:var(--f-mono);font-size:10px;font-weight:600;padding:1px 6px;border-radius:3px;margin-left:6px;vertical-align:1px;letter-spacing:.04em}
 .badge.prio{background:var(--over);color:#fff}
+.badge.deprio{background:transparent;color:var(--over);box-shadow:inset 0 0 0 1px var(--over)}
 tfoot td{border-bottom:0;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
 tfoot tr.sum td{border-top:1px solid var(--line-strong);font-weight:500}
 .ctr{display:inline-flex;align-items:center;border:1px solid var(--line-strong);border-radius:7px;overflow:hidden;background:var(--surface)}
