@@ -20,7 +20,7 @@ Planungs-Dashboards und geteiltes Stunden-Tracking für Digital Sparks (Educatio
 ## Regeln
 - Planänderungen nur in `plan.js`. Paket-, Zeilen- und Kurs-`id`s nie ändern (sonst Zähler bei 0). Keine zweite id-Liste mehr in der API.
 - Neuer Dashboard-Typ: Render-Funktion in `app.js` (gibt `{track, sums}` zurück) + Zweig in `PLAN.trackIds`.
-- PRIO-Label: `prio: true` an Zeilen, Anzeige per `showPrio` (aktuell aus). DEPRIO-Label: `deprio: true`, rot umrandet, immer sichtbar (aktuell Landing Page V3, Influencer Kampagne, Greenjobs · Interactive).
+- PRIO-Label: `prio: true` an Zeilen, Anzeige per `showPrio` (aktuell aus). DEPRIO-Label: `deprio: "<monat>"` → rot umrandet direkt hinter den Tagen dieses Monats (`true` = hinter dem Namen) (aktuell Landing Page V3, Influencer Kampagne, Greenjobs · Interactive).
 - Passwörter nie ins Repo (öffentlich!), nur in `PLANNER_USERS` auf Vercel.
 - Datenschutz: `plan.js` ist trotz Login öffentlich lesbar (statisch + öffentliches Repo), inkl. Vornamen bei „Wer“; geschützt sind nur die Ist-Stunden.
 - Nutzer-/Datei-Eingaben nie per innerHTML einsetzen.

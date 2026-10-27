@@ -50,7 +50,7 @@
       }
       h += `<tr><td class="lab"><span class="t">${r.n}</span>` +
         (P.showPrio && (r.prio || r.blocker) ? `<span class="badge prio">PRIO</span>` : "") +
-        (r.deprio ? `<span class="badge deprio">DEPRIO</span>` : "") +
+        (r.deprio === true ? `<span class="badge deprio">DEPRIO</span>` : "") +
         (r.sub ? `<span class="s">${r.sub}</span>` : "") + `</td>`;
       for (const m of M) {
         const p = (r.p || {})[m.k], f = (r.fl || {})[m.k], a = (r.ag || {})[m.k];
@@ -58,6 +58,7 @@
           (p ? `<span class="chip" style="background:${css(D.streams[r.s].c)}">${nf(p)} T</span>` : "") +
           (f ? `<span class="chip ext">FL ${nf(f)} T</span>` : "") +
           (a ? `<span class="chip ext ag">Agentur ${nf(a)} T</span>` : "") +
+          (r.deprio === m.k ? `<span class="badge deprio">DEPRIO</span>` : "") +
           `</div></td>`;
       }
       h += `<td class="ist">${counter(r.id, r.n)}</td></tr>`;

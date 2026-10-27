@@ -52,7 +52,8 @@ window.PLAN = {
       //   p  = Tage der Person je Monat
       //   fl = Freelance-Tage je Monat (kostet die Person nichts)
       //   ag = Agentur-Tage je Monat (kostet die Person nichts)
-      //   deprio: true = Label „DEPRIO“ (rot umrandet), immer sichtbar
+      //   deprio: "nov" = Label „DEPRIO“ (rot umrandet) direkt hinter den Tagen dieses Monats
+      //           (true = hinter dem Paketnamen)
       //   id = fester Schlüssel für das Stunden-Tracking. NICHT ändern, sonst
       //        startet der Zähler dieses Pakets wieder bei 0. Der Name (n) darf
       //        frei geändert werden.
@@ -63,12 +64,12 @@ window.PLAN = {
         { id: "r_support-marketing",   s: "base",   n: "Support-Marketing",   sub: "0,5 T pro Woche, getimeboxed",       p: { okt: 1, nov: 2, dez: 1.5, jan: 1.5 } },
 
         { id: "r_brandbook-v1",        s: "strat",  n: "Brandbook V1",        sub: "1 T MA, 2 T Freelance",              p: { okt: 1 }, fl: { nov: 2 } },
-        { id: "r_landing-page-v3",     s: "strat",  n: "Landing Page V3",     sub: "mind. 3 T im Nov",                   p: { okt: 1, nov: 3 }, deprio: true },
-        { id: "r_influencer-kampagne", s: "strat",  n: "Influencer Kampagne", sub: "Direction, 4 Wochen à 0,5 T · inhaltlich extern", p: { nov: 2 }, prio: true, deprio: true },
+        { id: "r_landing-page-v3",     s: "strat",  n: "Landing Page V3",     sub: "mind. 3 T im Nov",                   p: { okt: 1, nov: 3 }, deprio: "nov" },
+        { id: "r_influencer-kampagne", s: "strat",  n: "Influencer Kampagne", sub: "Direction, 4 Wochen à 0,5 T · inhaltlich extern", p: { nov: 2 }, prio: true, deprio: "nov" },
         { id: "r_berliner-cluster",    s: "strat",  n: "Berliner Cluster · Support", sub: "Video & Page, beides im Nov",   p: { nov: 2 } },
         { id: "r_pitch-v1",            s: "strat",  n: "Pitch V1",            sub: "eher Brandbook-Input",               p: { nov: 2, dez: 1, jan: 1 } },
 
-        { id: "r_greenjobs-interactive",  s: "sparks", n: "Greenjobs · Interactive",  sub: "intern · Release Mitte Dez",             p: { okt: 1, nov: 2, dez: 1 }, deprio: true },
+        { id: "r_greenjobs-interactive",  s: "sparks", n: "Greenjobs · Interactive",  sub: "intern · Release Mitte Dez",             p: { okt: 1, nov: 2, dez: 1 }, deprio: "nov" },
         { id: "r_greenjobs-marketing",    s: "sparks", n: "Greenjobs · Marketing",    sub: "",                                       p: { dez: 1 } },
         { id: "r_einsamkeit-interactive", s: "sparks", n: "Einsamkeit · Interactive", sub: "intern · Test ab 16.11. · Release 15.1.",   p: { nov: 5 }, prio: true },
         { id: "r_einsamkeit-game",        s: "sparks", n: "Einsamkeit · Game",        sub: "",                                       p: { nov: 2, dez: 2 }, fl: { dez: 2 }, prio: true },
