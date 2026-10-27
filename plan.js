@@ -56,19 +56,21 @@ window.PLAN = {
       //        startet der Zähler dieses Pakets wieder bei 0. Der Name (n) darf
       //        frei geändert werden.
       rows: [
+        { id: "r_other-stuff",         s: "base",   n: "Other stuff",         sub: "Sonstiges, ungeplant",               p: {} },
         { id: "r_leitung-okr-1",       s: "base",   n: "Leitung OKR-1",       sub: "max. 2 T bis 5.11., strikt",         p: { okt: 1.5, nov: 0.5 } },
         { id: "r_meetings",            s: "base",   n: "Meetings",            sub: "0,5 T pro Woche",                    p: { okt: 1, nov: 2, dez: 1.5, jan: 1.5 } },
         { id: "r_support-marketing",   s: "base",   n: "Support-Marketing",   sub: "0,5 T pro Woche, getimeboxed",       p: { okt: 1, nov: 2, dez: 1.5, jan: 1.5 } },
 
-        { id: "r_brandbook-v1",        s: "strat",  n: "Brandbook V1",        sub: "1 T MA, 2 T Freelance",              p: { okt: 1 }, fl: { okt: 2 } },
-        { id: "r_landing-page-v3",     s: "strat",  n: "Landing Page V3",     sub: "",                                   p: { okt: 1 } },
+        { id: "r_brandbook-v1",        s: "strat",  n: "Brandbook V1",        sub: "1 T MA, 2 T Freelance",              p: { okt: 1 }, fl: { nov: 2 } },
+        { id: "r_landing-page-v3",     s: "strat",  n: "Landing Page V3",     sub: "mind. 3 T im Nov",                   p: { okt: 1, nov: 3 } },
         { id: "r_influencer-kampagne", s: "strat",  n: "Influencer Kampagne", sub: "Direction, 4 Wochen à 0,5 T · inhaltlich extern", p: { nov: 2 }, prio: true },
-        { id: "r_pitch-v1",            s: "strat",  n: "Pitch V1",            sub: "eher Brandbook-Input",               p: { nov: 2 } },
+        { id: "r_berliner-cluster",    s: "strat",  n: "Berliner Cluster · Support", sub: "Video & Page, beides im Nov",   p: { nov: 2 } },
+        { id: "r_pitch-v1",            s: "strat",  n: "Pitch V1",            sub: "eher Brandbook-Input",               p: { nov: 2, dez: 1, jan: 1 } },
 
-        { id: "r_greenjobs-interactive",  s: "sparks", n: "Greenjobs · Interactive",  sub: "intern · Release Mitte Dez",             p: { okt: 1, nov: 1, dez: 1 } },
+        { id: "r_greenjobs-interactive",  s: "sparks", n: "Greenjobs · Interactive",  sub: "intern · Release Mitte Dez",             p: { okt: 1, nov: 2, dez: 1 } },
         { id: "r_greenjobs-marketing",    s: "sparks", n: "Greenjobs · Marketing",    sub: "",                                       p: { dez: 1 } },
-        { id: "r_einsamkeit-interactive", s: "sparks", n: "Einsamkeit · Interactive", sub: "intern · Test 30.11. · Release 15.1.",   p: { nov: 5 }, prio: true },
-        { id: "r_einsamkeit-game",        s: "sparks", n: "Einsamkeit · Game",        sub: "",                                       p: { nov: 2, dez: 2 }, fl: { nov: 2 }, prio: true },
+        { id: "r_einsamkeit-interactive", s: "sparks", n: "Einsamkeit · Interactive", sub: "intern · Test ab 16.11. · Release 15.1.",   p: { nov: 5 }, prio: true },
+        { id: "r_einsamkeit-game",        s: "sparks", n: "Einsamkeit · Game",        sub: "",                                       p: { nov: 2, dez: 2 }, fl: { dez: 2 }, prio: true },
         { id: "r_einsamkeit-kampagne",    s: "sparks", n: "Einsamkeit · Kampagne",    sub: "Steuerung, Umsetzung Agentur",           p: { dez: 1, jan: 1 }, ag: { dez: 2, jan: 2 }, prio: true },
         { id: "r_mythos-support",         s: "sparks", n: "Mythos · Support",         sub: "Marktplatz · Release 15.1.",             p: { dez: 2, jan: 1 }, prio: true },
         { id: "r_mythos-kampagne",        s: "sparks", n: "Mythos · Kampagne",        sub: "Steuerung, Umsetzung Agentur",           p: { dez: 1, jan: 1 }, ag: { dez: 2, jan: 2 }, prio: true },
@@ -79,15 +81,15 @@ window.PLAN = {
       // Wer übernimmt was (Listen unter der Tabelle)
       outsourcing: {
         freelance: [
-          { t: "Brandbook V1",      v: "2 T", s: "Okt · MA steuert mit 1 T" },
-          { t: "Einsamkeit · Game", v: "2 T", s: "Nov" }
+          { t: "Brandbook V1",      v: "2 T", s: "Nov · MA steuert mit 1 T (Okt)" },
+          { t: "Einsamkeit · Game", v: "2 T", s: "Dez" }
         ],
         agentur: [
           { t: "Einsamkeit · Kampagne", v: "4 T", s: "Dez/Jan · MA steuert mit 2 T" },
           { t: "Mythos · Kampagne",     v: "4 T", s: "Dez/Jan · MA steuert mit 2 T" }
         ],
         team: [
-          { t: "Pitch V1",            v: "bis Feb",    s: "MA liefert 2 T im Nov" },
+          { t: "Pitch V1",            v: "bis Feb",    s: "MA liefert 2 T im Nov, je 1 T im Dez und Jan" },
           { t: "Influencer Kampagne", v: "inhaltlich", s: "MA macht 2 T Direction im Nov" }
         ]
       },
@@ -136,7 +138,7 @@ window.PLAN = {
           id: "einsamkeit", n: "Einsamkeit", partner: "DKHW",
           kind: "intern", kindLabel: "Interner Kurs · mehr Ressourcen",
           sub: "Eigener Spark mit neuen Interactive-Inhalten und eigener Kampagne.",
-          test: "30.11.", release: "15.1.",
+          test: "ab 16.11.", release: "15.1.",
           t:  { contenterarbeitung: 15, interactive: 11, briefing: 1, marketing: 6, einpflegen: 2, iteration: 2 },
           fl: { interactive: 2 },
           ag: { marketing: 4 },
