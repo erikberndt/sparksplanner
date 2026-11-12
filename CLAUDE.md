@@ -6,7 +6,7 @@ Planungs-Dashboards und geteiltes Stunden-Tracking für Digital Sparks (Educatio
 - Statische Seite ohne Build: `index.html`, `styles.css`, `plan.js` (Daten), `app.js` (Darstellung + Tracking)
 - `plan.js`: `users[]` (id, n, dashboards[]) + `dashboards{}` mit `type`:
   - `person` → `renderPerson` (Monatsmatrix, Monats-Tabs mobil ≤720px, localStorage `sp-month`)
-  - `kurse` → `renderKurse` (Kurse untereinander, nur Pakete mit Tagen; `t` gesamt, `fl`/`ag` davon extern; `who` je Kurs überschreibt Paket-`who`, „offen“ ohne Person; Spalte Zeitraum aus `from` = Zeilen-ids im Personen-Dashboard `fromDash` (Monate mit Tagen) oder Text `when`; KEIN Stunden-Tracking, Export/Import ausgeblendet)
+  - `kurse` → `renderKurse` (Kurse untereinander, nur Pakete mit Tagen; `t` gesamt, `fl`/`ag` davon extern; `who` je Kurs überschreibt Paket-`who`, „offen“ ohne Person; Spalte Zeitraum aus `from` = Zeilen-ids im Personen-Dashboard `fromDash` (Monate mit Tagen) oder Text `when`; `open` = ungeplanter Anteil als gestrichelter Chip; `todos` = offene Punkte aus dem letzten Meeting im Kurskopf; KEIN Stunden-Tracking, Export/Import ausgeblendet)
   - `PLAN.trackIds(d)` = Stunden-Schlüssel (nur `person`), von Seite UND Server genutzt
 - Mehrere Dashboards je Konto → Tabs `#dtabs` (localStorage `sp-dash-<user>`)
 - `api/hours.js`: Supabase REST, Tabelle `ds_hours`, RPC `ds_add_hours`; erlaubte ids je Konto via `api/_plan.js` (lädt plan.js mit Fake-`window`). Stunden in halben Schritten (`numeric(7,1)`, Klick = ±0,5 h)
@@ -15,6 +15,7 @@ Planungs-Dashboards und geteiltes Stunden-Tracking für Digital Sparks (Educatio
 - Export/Import je aktuellem Dashboard: JSON `{app, dashboard, exported, hours:{id:h}, rows}`; Import → `POST /api/hours {set}`
 - `og.png`: Social Image (1200×630), Quelle `og/og.html` (liest `dashboards.person`), Render-Befehl im Kommentar
 - `.vercelignore`: og/, supabase/, Doku werden nicht deployed
+- Lokal testen: `node .claude/devserver.js` → http://localhost:4317 (simuliertes Supabase, Login member1/member2 · testtest); `.claude/launch.json` startet ihn im Browser-Pane
 - Env-Variablen: `SUPABASE_URL` + `SUPABASE_SECRET_KEY` (oder `SUPABASE_SERVICE_ROLE_KEY`), `PLANNER_USERS` (`member1:pw,member2:pw`), optional `PLANNER_SECRET`
 
 ## Regeln
@@ -30,3 +31,4 @@ Planungs-Dashboards und geteiltes Stunden-Tracking für Digital Sparks (Educatio
 - 2026-10-26: Halbe Stunden (Migration `supabase/migration-2026-10-halbe-stunden.sql` in Supabase gelaufen).
 - 2026-10-26: Kurs-Dashboard ohne Tracking, nur Pakete mit Tagen, Zeiträume aus Ginas Plan (member1 = Gina).
 - 2026-10-26: Namensänderung per Klick wieder entfernt (Tabelle `ds_names` evtl. noch in Supabase, ungenutzt). Dashboards eingeführt: member1 → `person`, member2 → `sparks` (Einsamkeit/DKHW, Mythos Neutralität/Robert Bosch, Klassenrat/DeGeDe). Auf Vercel nötig: `PLANNER_USERS` um `member2:…` ergänzen + Redeploy.
+- 2026-11-12: Mythos nach Meeting angepasst: Release 15.2., Testing entfällt, Dev 4 T, Marketing 3 T fest + Kampagne offen (max. 3.000 €), offene Punkte im Kurskopf.

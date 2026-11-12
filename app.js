@@ -160,10 +160,12 @@
         const whoHtml = who || `<span class="open">offen</span>`;
         const when = period(c, p);
         const note = [p.sub, (c.notes || {})[p.id]].filter(Boolean).join(" · ");
+        const open = (c.open || {})[p.id];
         const cell =
           (team ? `<span class="chip" style="background:var(--sparks)">${nf(team)} T</span>` : "") +
           (d.fl ? `<span class="chip ext">FL ${nf(d.fl)} T</span>` : "") +
-          (d.ag ? `<span class="chip ext ag">Agentur ${nf(d.ag)} T</span>` : "");
+          (d.ag ? `<span class="chip ext ag">Agentur ${nf(d.ag)} T</span>` : "") +
+          (open ? `<span class="chip tbd">${open}</span>` : "");
         return `<tr>` +
           `<td class="lab"><span class="t">${p.n}</span>` +
             (note ? `<span class="s">${note}</span>` : "") +
@@ -182,6 +184,9 @@
             date("Testing", c.test) + date("Release", c.release) +
           `</div>` +
           (c.sub ? `<p class="ksub">${c.sub}</p>` : "") +
+          ((c.todos || []).length
+            ? `<div class="ktodos"><h3>Offen aus dem Meeting</h3><ul>${c.todos.map((t) => `<li>${t}</li>`).join("")}</ul></div>`
+            : "") +
         `</header>` +
         `<div class="scroll"><table class="ktbl">` +
           `<thead><tr><th>Paket</th><th>Tage</th><th class="who-h">Wer</th><th class="when">Zeitraum</th></tr></thead>` +

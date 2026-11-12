@@ -148,6 +148,11 @@ body:not(.locked) .gate{display:none}
 .ktbl .open{color:var(--warn);font-weight:500}
 .ktbl .lab .who-m{display:none}
 .ksplit{display:block;font-size:11px;color:var(--muted);font-weight:400}
+.chip.tbd{background:transparent;border:1.5px dashed var(--warn);color:var(--warn)}
+.ktodos{display:grid;gap:6px;max-width:80ch}
+.ktodos h3{margin:0;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.ktodos ul{margin:0;padding-left:18px;display:grid;gap:4px;font-size:13.5px}
+@media (max-width:720px){.chip.tbd{white-space:normal;height:auto;padding:3px 6px}}
 @media (max-width:720px){
   .ktbl{min-width:0}
   .ktbl th.who-h,.ktbl td.who-c{display:none}

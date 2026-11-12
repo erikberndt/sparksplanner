@@ -74,7 +74,7 @@ window.PLAN = {
         { id: "r_einsamkeit-interactive", s: "sparks", n: "Einsamkeit · Interactive", sub: "intern · Test ab 16.11. · Release 15.1.",   p: { nov: 5 }, prio: true },
         { id: "r_einsamkeit-game",        s: "sparks", n: "Einsamkeit · Game",        sub: "",                                       p: { nov: 2, dez: 2 }, fl: { dez: 2 }, prio: true },
         { id: "r_einsamkeit-kampagne",    s: "sparks", n: "Einsamkeit · Kampagne",    sub: "Steuerung, Umsetzung Agentur",           p: { dez: 1, jan: 1 }, ag: { dez: 2, jan: 2 }, prio: true },
-        { id: "r_mythos-support",         s: "sparks", n: "Mythos · Support",         sub: "Marktplatz · Release 15.1.",             p: { dez: 2, jan: 1 }, prio: true },
+        { id: "r_mythos-support",         s: "sparks", n: "Mythos · Support",         sub: "Marktplatz · Release 15.2.",             p: { dez: 2, jan: 1 }, prio: true },
         { id: "r_mythos-kampagne",        s: "sparks", n: "Mythos · Kampagne",        sub: "Steuerung, Umsetzung Agentur",           p: { dez: 1, jan: 1 }, ag: { dez: 2, jan: 2 }, prio: true },
         { id: "r_klassenrat-support",     s: "sparks", n: "Klassenrat · Support",     sub: "Marktplatz · Einarbeitung Dez · Release 5.2.", p: { dez: 1, jan: 2 } },
         { id: "r_klassenrat-marketing",   s: "sparks", n: "Klassenrat · Marketing",   sub: "",                                       p: { jan: 1 } }
@@ -134,6 +134,8 @@ window.PLAN = {
       //   who     = abweichende Personen für ein Paket in diesem Kurs
       //   from    = Zeilen-ids aus dem Personen-Dashboard → Zeitraum (Monate mit Tagen)
       //   when    = Zeitraum als Text, falls nicht aus "from" ableitbar
+      //   open    = noch ungeplanter Anteil eines Pakets als Text (gestrichelt, z. B. "Kampagne ? T")
+      //   todos   = offene Punkte aus dem letzten Meeting (Liste im Kurskopf)
       //   test / release: Datum oder "tbd"
       courses: [
         {
@@ -151,12 +153,25 @@ window.PLAN = {
         {
           id: "mythos", n: "Mythos Neutralität", partner: "Robert Bosch",
           kind: "markt", kindLabel: "Marktplatzkurs",
-          sub: "Marktplatz-Spark: nur Support, aber eigene Kampagne.",
-          test: "tbd", release: "15.1.",
-          t:  { contentsupport: 3, interactive: 3, briefing: 1, marketing: 6, einpflegen: 1, iteration: 2, dev: 1 },
-          ag: { marketing: 4 },
-          notes: { marketing: "Kampagne" },
-          from: { interactive: ["r_mythos-support"], briefing: ["r_mythos-support"], marketing: ["r_mythos-kampagne"] }
+          sub: "Marktplatz-Spark: nur Support, aber eigene Kampagne. Release verschoben auf 15.2. (statt 15.1.), bis dahin muss V1 Akademie stehen.",
+          test: "entfällt", release: "15.2.",
+          t:  { contentsupport: 3, interactive: 3, briefing: 1, marketing: 3, einpflegen: 1, iteration: 2, dev: 4 },
+          open: { marketing: "Kampagne ? T · max. 3.000 €" },
+          notes: {
+            interactive: "Kickoff im Dez · Tom blockt Zeit für komplexere Übungen",
+            briefing: "Briefing-Support · Feedback-Termin im Dez · Illus & Videos extern",
+            marketing: "3 T fest fürs Release: Newsletter & Landingpage",
+            dev: "+3 T · V1 Akademie bis 15.2."
+          },
+          who: { interactive: "Gina, Tom", briefing: "Gina + extern (Illu, Video)" },
+          when: { dev: "bis 15.2." },
+          todos: [
+            "Paul über den neuen Termin 15.2. informieren",
+            "Kathinka lädt im Dez zum Interactive-Kickoff ein (Gina, Tom)",
+            "Kathinka lädt im Dez zum Briefing-Feedback ein (Gina, Paul)",
+            "Sarah & Stephan stimmen die erweiterte Kampagne ab (Plakate vor Schulen, Robert-Bosch-Initiativen: tbd)"
+          ],
+          from: { interactive: ["r_mythos-support"], briefing: ["r_mythos-support"] }
         },
         {
           id: "klassenrat", n: "Klassenrat", partner: "DeGeDe",
